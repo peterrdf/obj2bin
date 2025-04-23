@@ -104,35 +104,46 @@ namespace _obj2bin
 		m_iModel = CreateModel();
 		assert(m_iModel != 0);
 
-		OwlClass iClass = GetClassByName(m_iModel, "BoundaryRepresentation");
-		VERIFY_INSTANCE(iClass);
-
-		OwlInstance iInstance = CreateInstance(iClass);
-		VERIFY_INSTANCE(iInstance);
+		OwlInstance owlBRepInstance = CreateInstance(GetClassByName(m_iModel, "BoundaryRepresentation"));
+		VERIFY_INSTANCE(owlBRepInstance);
 
 		SetDatatypeProperty(
-			iInstance,
+			owlBRepInstance,
 			GetPropertyByName(m_iModel, "indices"),
 			m_vecBRepIndices.data(),
 			m_vecBRepIndices.size());
 
 		SetDatatypeProperty(
-			iInstance,
+			owlBRepInstance,
 			GetPropertyByName(m_iModel, "vertices"),
 			m_vecBRepVertices.data(),
 			m_vecBRepVertices.size());
 
 		SetDatatypeProperty(
-			iInstance,
+			owlBRepInstance,
 			GetPropertyByName(m_iModel, "normalCoordinates"),
 			m_vecBRepNormals.data(),
 			m_vecBRepNormals.size());
 
 		SetDatatypeProperty(
-			iInstance,
+			owlBRepInstance,
 			GetPropertyByName(m_iModel, "textureCoordinates"),
 			m_vecBRepTextureUVs.data(),
 			m_vecBRepTextureUVs.size());
+
+		VERIFY_EXPRESSION(m_setMaterials.size() == 1);
+
+		OwlInstance owlMaterialInstance = CreateInstance(GetClassByName(m_iModel, "Material"));
+		SetObjectProperty(owlBRepInstance, GetPropertyByName(m_iModel, "material"), owlMaterialInstance);
+
+		OwlInstance owlTextureInstance = CreateInstance(GetClassByName(m_iModel, "Texture"));
+		SetObjectProperty(owlMaterialInstance, GetPropertyByName(m_iModel, "textures"), owlTextureInstance);
+
+		char** szMaterial = new char* [1];
+		szMaterial[0] = new char[strlen("material_0.png") + 1];
+		strcpy(szMaterial[0], "material_0.png");
+
+		SetDatatypeProperty(owlTextureInstance, GetPropertyByName(m_iModel, "name"), (void**)szMaterial, 1);
 
 		SaveModel(m_iModel, m_strOutputFile.c_str());
 	}
