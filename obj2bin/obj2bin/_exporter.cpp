@@ -83,16 +83,16 @@ namespace _obj2bin
 
 				m_vecBRepIndices.push_back(iIndex++);
 
-				long iVertexIndex = atol(vecFaceVertex[0].c_str());
+				long iVertexIndex = atol(vecFaceVertex[0].c_str()) - 1;
 				m_vecBRepVertices.push_back(m_vecVertices[(iVertexIndex * 3) + 0]);
 				m_vecBRepVertices.push_back(m_vecVertices[(iVertexIndex * 3) + 1]);
 				m_vecBRepVertices.push_back(m_vecVertices[(iVertexIndex * 3) + 2]);
 
-				long iUVIndex = atol(vecFaceVertex[1].c_str());
+				long iUVIndex = atol(vecFaceVertex[1].c_str()) - 1;
 				m_vecBRepTextureUVs.push_back(m_vecTextureUVs[(iUVIndex * 2) + 0]);
 				m_vecBRepTextureUVs.push_back(m_vecTextureUVs[(iUVIndex * 2) + 1]);
 
-				long iNormalIndex = atol(vecFaceVertex[2].c_str());
+				long iNormalIndex = atol(vecFaceVertex[2].c_str()) - 1;
 				m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 0]);
 				m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 1]);
 				m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 2]);
