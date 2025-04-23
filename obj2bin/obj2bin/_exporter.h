@@ -32,12 +32,17 @@ namespace _obj2bin
 		set<string> m_setMaterialLibraries;
 		vector<string> m_setMaterials;
 
-		// Geometry
+		// Input
 		vector<double> m_vecVertices;
 		vector<double> m_vecNormals;
 		vector<double> m_vecTextureUVs;
 		vector<string> m_vecFaces;
-		vector<int64_t> m_vecIndices;
+
+		// BRep
+		vector<int64_t> m_vecBRepIndices;
+		vector<double> m_vecBRepVertices;
+		vector<double> m_vecBRepNormals;
+		vector<double> m_vecBRepTextureUVs;
 		
 
 	public: // Methods

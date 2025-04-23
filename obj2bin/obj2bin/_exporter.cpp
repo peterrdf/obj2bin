@@ -18,7 +18,10 @@ namespace _obj2bin
 		, m_vecNormals()
 		, m_vecTextureUVs()
 		, m_vecFaces()
-		, m_vecIndices()
+		, m_vecBRepIndices()
+		, m_vecBRepVertices()
+		, m_vecBRepNormals()
+		, m_vecBRepTextureUVs()
 	{
 		VERIFY_POINTER(szInputFile);
 		VERIFY_POINTER(szOutputFile);
@@ -64,8 +67,39 @@ namespace _obj2bin
 		delete pReader;
 
 		//
-		// Output
+		// BRep
 		//
+
+		int64_t iIndex = 0;
+		for (size_t iFace = 0; iFace < m_vecFaces.size(); iFace++) {
+			vector<string> vecTokens;
+			_string::split(m_vecFaces[iFace], " ", vecTokens, false);
+			VERIFY_EXPRESSION(vecTokens.size() == 4);
+
+			for (size_t iFaceVertex = 1; iFaceVertex < vecTokens.size(); iFaceVertex++) {
+				vector<string> vecFaceVertex;
+				_string::split(vecTokens[iFaceVertex], "/", vecFaceVertex, false);
+				VERIFY_EXPRESSION(vecFaceVertex.size() == 3);			
+
+				m_vecBRepIndices.push_back(iIndex++);
+
+				long iVertexIndex = atol(vecFaceVertex[0].c_str());
+				m_vecBRepVertices.push_back(m_vecVertices[(iVertexIndex * 3) + 0]);
+				m_vecBRepVertices.push_back(m_vecVertices[(iVertexIndex * 3) + 1]);
+				m_vecBRepVertices.push_back(m_vecVertices[(iVertexIndex * 3) + 2]);
+
+				long iUVIndex = atol(vecFaceVertex[1].c_str());
+				m_vecBRepTextureUVs.push_back(m_vecTextureUVs[(iUVIndex * 2) + 0]);
+				m_vecBRepTextureUVs.push_back(m_vecTextureUVs[(iUVIndex * 2) + 1]);
+
+				long iNormalIndex = atol(vecFaceVertex[2].c_str());
+				m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 0]);
+				m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 1]);
+				m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 2]);
+			}
+
+			m_vecBRepIndices.push_back(-1);
+		} // for (size_t iFace = ...
 
 		m_iModel = CreateModel();
 		assert(m_iModel != 0);
@@ -79,26 +113,26 @@ namespace _obj2bin
 		SetDatatypeProperty(
 			iInstance,
 			GetPropertyByName(m_iModel, "indices"),
-			m_vecIndices.data(),
-			m_vecIndices.size());
+			m_vecBRepIndices.data(),
+			m_vecBRepIndices.size());
 
 		SetDatatypeProperty(
 			iInstance,
 			GetPropertyByName(m_iModel, "vertices"),
-			m_vecVertices.data(),
-			m_vecVertices.size());
+			m_vecBRepVertices.data(),
+			m_vecBRepVertices.size());
 
 		SetDatatypeProperty(
 			iInstance,
 			GetPropertyByName(m_iModel, "normalCoordinates"),
-			m_vecNormals.data(),
-			m_vecNormals.size());
+			m_vecBRepNormals.data(),
+			m_vecBRepNormals.size());
 
 		SetDatatypeProperty(
 			iInstance,
 			GetPropertyByName(m_iModel, "textureCoordinates"),
-			m_vecTextureUVs.data(),
-			m_vecTextureUVs.size());
+			m_vecBRepTextureUVs.data(),
+			m_vecBRepTextureUVs.size());
 
 		SaveModel(m_iModel, m_strOutputFile.c_str());
 	}
@@ -136,7 +170,7 @@ namespace _obj2bin
 			VERIFY_EXPRESSION(vecTokens.size() == 3);
 
 			m_vecTextureUVs.push_back(atof(vecTokens[1].c_str()));
-			m_vecTextureUVs.push_back(atof(vecTokens[2].c_str()));
+			m_vecTextureUVs.push_back(-atof(vecTokens[2].c_str()));
 		} else if (strLine.find("vn ") == 0) {
 			// Normals
 			_string::split(strLine, " ", vecTokens, false);
@@ -147,12 +181,7 @@ namespace _obj2bin
 			m_vecNormals.push_back(atof(vecTokens[3].c_str()));
 		} else if (strLine.find("f ") == 0) {
 			// Faces
-			_string::split(strLine, " ", vecTokens, false);
-			VERIFY_EXPRESSION(vecTokens.size() == 4);
-
-			m_vecFaces.push_back(vecTokens[1].c_str());
-			m_vecFaces.push_back(vecTokens[2].c_str());
-			m_vecFaces.push_back(vecTokens[3].c_str());
+			m_vecFaces.push_back(strLine);
 		} else {
 			assert(false);
 		}
