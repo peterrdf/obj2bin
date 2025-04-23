@@ -20,7 +20,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-	void DECSPEC STDCALL SetOB2BINOptions(void* pLogCallback);
+	void DECSPEC STDCALL SetOBJ2BINOptions(void* pLogCallback);
 
 	void DECSPEC STDCALL SaveAsBIN(const char* szInputFile, const char* szOutputFile);
 #ifdef __cplusplus

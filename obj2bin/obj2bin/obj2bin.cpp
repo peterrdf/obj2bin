@@ -19,7 +19,7 @@ static _log_callback g_pLogCallback = nullptr;
 #ifdef __cplusplus
 extern "C" {
 #endif
-	void DECSPEC STDCALL SetOBG2BINOptions(void* pLogCallback)
+	void DECSPEC STDCALL SetOBJ2BINOptions(void* pLogCallback)
 	{
 		g_pLogCallback = (_log_callback)pLogCallback;
 	}

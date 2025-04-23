@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "_exporter.h"
 
+#include "_string.h"
+
 // ************************************************************************************************
 namespace _obj2bin
 {
@@ -10,9 +12,12 @@ namespace _obj2bin
 		, m_iModel(0)
 		, m_strInputFile()
 		, m_strOutputFile()
-		, m_iVerticesCount(0)
-		, m_iFacesCount(0)
+		, m_setMaterialLibraries()
+		, m_setMaterials()
 		, m_vecVertices()
+		, m_vecNormals()
+		, m_vecTextureUVs()
+		, m_vecFaces()
 		, m_vecIndices()
 	{
 		VERIFY_POINTER(szInputFile);
@@ -31,111 +36,6 @@ namespace _obj2bin
 
 	void _exporter::execute()
 	{
-		int iDataOffset = 0;
-		if (!readHeader(iDataOffset)) {
-			return;
-		}
-
-		//#todo
-
-		// plate
-		m_iVerticesCount = 8453; m_iFacesCount = 16539;
-
-		std::ifstream binStream(m_strInputFile.c_str(), std::ios::in | std::ios::binary);
-		VERIFY_EXPRESSION(binStream.good());
-
-		binStream.seekg(iDataOffset, ios::beg);
-
-		//#todo
-		//bool big_endian = is_big_endian();
-
-		// #todo readVertices
-		{
-
-
-			//#todo verices count
-			for (int v = 0; v < m_iVerticesCount; v++) {
-				{
-					vector<double> vertex;
-					vertex.resize(3);
-					binStream.read((char*)vertex.data(), 3 * sizeof(double));
-
-					m_vecVertices.insert(m_vecVertices.end(), vertex.begin(), vertex.end());
-
-				}
-
-				{
-					vector<unsigned char> rgb;
-					rgb.resize(3);
-					binStream.read((char*)rgb.data(), 3 * sizeof(unsigned char));
-				}
-
-				{
-					unsigned char alpha;
-					binStream.read((char*)&alpha, sizeof(unsigned char));
-				}
-
-				{
-					double quality;
-					binStream.read((char*)&quality, sizeof(double));
-				}
-			}
-
-			// #todo read faces
-			{
-				for (int v = 0; v < m_iFacesCount; v++) {
-					unsigned char count;
-					binStream.read((char*)&count, sizeof(unsigned char));
-
-					vector<int> vertex;
-					vertex.resize(count);
-					binStream.read((char*)vertex.data(), count * sizeof(int));
-
-					m_vecIndices.insert(m_vecIndices.end(), vertex.begin(), vertex.end());
-					m_vecIndices.push_back(-1);
-				}
-			}
-
-			binStream.close();
-		}
-
-		cout << "";
-
-		m_iModel = CreateModel();
-		assert(m_iModel != 0);
-
-		{
-			//OwlClass iClass = GetClassByName(m_iModel, "TriangleSet");
-			OwlClass iClass = GetClassByName(m_iModel, "BoundaryRepresentation");
-			VERIFY_INSTANCE(iClass);
-
-			OwlInstance iInstance = CreateInstance(iClass);
-			VERIFY_INSTANCE(iInstance);
-
-
-
-			SetDatatypeProperty(
-				iInstance,
-				GetPropertyByName(m_iModel, "indices"),
-				m_vecIndices.data(),
-				m_vecIndices.size());
-
-			SetDatatypeProperty(
-				iInstance,
-				GetPropertyByName(m_iModel, "vertices"),
-				m_vecVertices.data(),
-				m_vecVertices.size());
-		}
-
-
-		//#todo
-		SaveModel(m_iModel, m_strOutputFile.c_str());
-	}
-
-	bool _exporter::readHeader(int& iDataOffset)
-	{
-		iDataOffset = 0;
-
 		auto pReader = new _file_reader();
 		if (!pReader->open(m_strInputFile.c_str())) {
 			THROW_ERROR(_err::_file);
@@ -147,37 +47,114 @@ namespace _obj2bin
 			THROW_ERROR(_err::_file);
 		}
 
-		iDataOffset = 1;
-
-		int iLineIndex = -1;
-		string strHeaderLine;
+		string stLine;
 		while (ch != EOF) {
 			if ((ch == LF) || (ch == CR)) {
-				iLineIndex++;
-				if (iLineIndex > 100) {
-					THROW_ERROR(_err::_format);
-				}
-
-				if (strHeaderLine == "end_header") {
-					break;
-				}
-
-				strHeaderLine = "";
+				processLine(stLine);
+				stLine = "";
 
 				ch = pReader->getNextChar(false);
-				iDataOffset++;
-
 				continue;
 			}
 
-			strHeaderLine += ch;
-
+			stLine += ch;
 			ch = pReader->getNextChar(false);
-			iDataOffset++;
-		} // while (ch != EOF)
+		}
 
 		delete pReader;
 
-		return strHeaderLine == "end_header";
+		//
+		// Output
+		//
+
+		m_iModel = CreateModel();
+		assert(m_iModel != 0);
+
+		OwlClass iClass = GetClassByName(m_iModel, "BoundaryRepresentation");
+		VERIFY_INSTANCE(iClass);
+
+		OwlInstance iInstance = CreateInstance(iClass);
+		VERIFY_INSTANCE(iInstance);
+
+		SetDatatypeProperty(
+			iInstance,
+			GetPropertyByName(m_iModel, "indices"),
+			m_vecIndices.data(),
+			m_vecIndices.size());
+
+		SetDatatypeProperty(
+			iInstance,
+			GetPropertyByName(m_iModel, "vertices"),
+			m_vecVertices.data(),
+			m_vecVertices.size());
+
+		SetDatatypeProperty(
+			iInstance,
+			GetPropertyByName(m_iModel, "normalCoordinates"),
+			m_vecNormals.data(),
+			m_vecNormals.size());
+
+		SetDatatypeProperty(
+			iInstance,
+			GetPropertyByName(m_iModel, "textureCoordinates"),
+			m_vecTextureUVs.data(),
+			m_vecTextureUVs.size());
+
+		SaveModel(m_iModel, m_strOutputFile.c_str());
+	}
+
+	void _exporter::processLine(const string& strLine)
+	{
+		vector<string> vecTokens;
+
+		if (strLine.find("#") == 0) {
+			// Comment
+			getLog()->logWrite(enumLogEvent::info, strLine);
+		} else if (strLine.find("mtllib ") == 0) {
+			// Material Library
+			_string::split(strLine, " ", vecTokens, false);
+			VERIFY_EXPRESSION(vecTokens.size() == 2);
+
+			m_setMaterialLibraries.insert(vecTokens[1]);
+		} else if (strLine.find("usemtl ") == 0) {
+			// Current Material
+			_string::split(strLine, " ", vecTokens, false);
+			VERIFY_EXPRESSION(vecTokens.size() == 2);
+
+			m_setMaterials.push_back(vecTokens[1]);
+		} else if (strLine.find("v ") == 0) {
+			// Vertex
+			_string::split(strLine, " ", vecTokens, false);
+			VERIFY_EXPRESSION(vecTokens.size() == 4);
+
+			m_vecVertices.push_back(atof(vecTokens[1].c_str()));
+			m_vecVertices.push_back(atof(vecTokens[2].c_str()));
+			m_vecVertices.push_back(atof(vecTokens[3].c_str()));
+		} else if (strLine.find("vt ") == 0) {
+			// Texture UV
+			_string::split(strLine, " ", vecTokens, false);
+			VERIFY_EXPRESSION(vecTokens.size() == 3);
+
+			m_vecTextureUVs.push_back(atof(vecTokens[1].c_str()));
+			m_vecTextureUVs.push_back(atof(vecTokens[2].c_str()));
+		} else if (strLine.find("vn ") == 0) {
+			// Normals
+			_string::split(strLine, " ", vecTokens, false);
+			VERIFY_EXPRESSION(vecTokens.size() == 4);
+
+			m_vecNormals.push_back(atof(vecTokens[1].c_str()));
+			m_vecNormals.push_back(atof(vecTokens[2].c_str()));
+			m_vecNormals.push_back(atof(vecTokens[3].c_str()));
+		} else if (strLine.find("f ") == 0) {
+			// Faces
+			_string::split(strLine, " ", vecTokens, false);
+			VERIFY_EXPRESSION(vecTokens.size() == 4);
+
+			m_vecFaces.push_back(vecTokens[1].c_str());
+			m_vecFaces.push_back(vecTokens[2].c_str());
+			m_vecFaces.push_back(vecTokens[3].c_str());
+		} else {
+			assert(false);
+		}
 	}
 };

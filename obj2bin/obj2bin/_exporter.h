@@ -28,13 +28,17 @@ namespace _obj2bin
 		string m_strInputFile;
 		string m_strOutputFile;
 
-		// Header
-		int m_iVerticesCount;
-		int m_iFacesCount;
+		// Materials
+		set<string> m_setMaterialLibraries;
+		vector<string> m_setMaterials;
 
 		// Geometry
 		vector<double> m_vecVertices;
+		vector<double> m_vecNormals;
+		vector<double> m_vecTextureUVs;
+		vector<string> m_vecFaces;
 		vector<int64_t> m_vecIndices;
+		
 
 	public: // Methods
 
@@ -45,7 +49,7 @@ namespace _obj2bin
 
 	private: // Methods
 
-		bool readHeader(int& iDataOffset);
+		void processLine(const string& strLine);
 	};
 };
 
