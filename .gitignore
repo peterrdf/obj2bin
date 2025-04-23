@@ -1,0 +1,14 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/obj2bin/.vs/obj2bin
+/obj2bin/obj2bin/x64/Debug
+/obj2bin/testobj2bin/x64/Debug
+/obj2bin/x64/Debug/obj2bin.dll
+/obj2bin/x64/Debug/obj2bin.exp
+/obj2bin/x64/Debug/obj2bin.lib
+/obj2bin/x64/Debug/obj2bin.pdb
+/obj2bin/x64/Debug/testobj2bin.exe
+/obj2bin/x64/Debug/testobj2bin.pdb
