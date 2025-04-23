@@ -14,6 +14,7 @@ namespace _obj2bin
 		, m_strOutputFile()
 		, m_setMaterialLibraries()
 		, m_setMaterials()
+		, m_iDefaultMaterialInstance(0)
 		, m_vecVertices()
 		, m_vecNormals()
 		, m_vecTextureUVs()
@@ -50,21 +51,27 @@ namespace _obj2bin
 			THROW_ERROR(_err::_file);
 		}
 
-		string stLine;
+		string strLine;
 		while (ch != EOF) {
 			if ((ch == LF) || (ch == CR)) {
-				processLine(stLine);
-				stLine = "";
+				processOBJLine(strLine);
+				strLine = "";
 
 				ch = pReader->getNextChar(false);
 				continue;
 			}
 
-			stLine += ch;
+			strLine += ch;
 			ch = pReader->getNextChar(false);
 		}
 
 		delete pReader;
+
+		//
+		// Materials
+		//
+
+		loadMaterials();
 
 		//
 		// BRep
@@ -88,9 +95,11 @@ namespace _obj2bin
 				m_vecBRepVertices.push_back(m_vecVertices[(iVertexIndex * 3) + 1]);
 				m_vecBRepVertices.push_back(m_vecVertices[(iVertexIndex * 3) + 2]);
 
-				long iUVIndex = atol(vecFaceVertex[1].c_str()) - 1;
-				m_vecBRepTextureUVs.push_back(m_vecTextureUVs[(iUVIndex * 2) + 0]);
-				m_vecBRepTextureUVs.push_back(m_vecTextureUVs[(iUVIndex * 2) + 1]);
+				if (!m_vecTextureUVs.empty()) {
+					long iUVIndex = atol(vecFaceVertex[1].c_str()) - 1;
+					m_vecBRepTextureUVs.push_back(m_vecTextureUVs[(iUVIndex * 2) + 0]);
+					m_vecBRepTextureUVs.push_back(m_vecTextureUVs[(iUVIndex * 2) + 1]);
+				}
 
 				long iNormalIndex = atol(vecFaceVertex[2].c_str()) - 1;
 				m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 0]);
@@ -125,13 +134,13 @@ namespace _obj2bin
 			m_vecBRepNormals.data(),
 			m_vecBRepNormals.size());
 
-		SetDatatypeProperty(
-			owlBRepInstance,
-			GetPropertyByName(m_iModel, "textureCoordinates"),
-			m_vecBRepTextureUVs.data(),
-			m_vecBRepTextureUVs.size());
-
-		VERIFY_EXPRESSION(m_setMaterials.size() == 1);
+		if (!m_vecBRepNormals.empty()) {
+			SetDatatypeProperty(
+				owlBRepInstance,
+				GetPropertyByName(m_iModel, "textureCoordinates"),
+				m_vecBRepTextureUVs.data(),
+				m_vecBRepTextureUVs.size());
+		}		
 
 		OwlInstance owlMaterialInstance = CreateInstance(GetClassByName(m_iModel, "Material"));
 		SetObjectProperty(owlBRepInstance, GetPropertyByName(m_iModel, "material"), owlMaterialInstance);
@@ -148,7 +157,7 @@ namespace _obj2bin
 		SaveModel(m_iModel, m_strOutputFile.c_str());
 	}
 
-	void _exporter::processLine(const string& strLine)
+	void _exporter::processOBJLine(const string& strLine)
 	{
 		vector<string> vecTokens;
 
@@ -166,7 +175,7 @@ namespace _obj2bin
 			_string::split(strLine, " ", vecTokens, false);
 			VERIFY_EXPRESSION(vecTokens.size() == 2);
 
-			m_setMaterials.push_back(vecTokens[1]);
+			m_setMaterials.insert(vecTokens[1]);
 		} else if (strLine.find("v ") == 0) {
 			// Vertex
 			_string::split(strLine, " ", vecTokens, false);
@@ -194,7 +203,117 @@ namespace _obj2bin
 			// Faces
 			m_vecFaces.push_back(strLine);
 		} else {
-			assert(false);
+			string strWarning = "Not support element: '"; 
+			strWarning += strLine.substr(0, 10);
+			strWarning += "...'";
+			getLog()->logWrite(enumLogEvent::warning, strWarning);
 		}
+	}
+
+	void _exporter::loadMaterials()
+	{
+		fs::path pathInputFolder = m_strInputFile;
+		pathInputFolder = pathInputFolder.parent_path();
+
+		for (const auto& strMaterialLibarary : m_setMaterialLibraries) {
+			fs::path pathMaterialLibarary = pathInputFolder;
+			pathMaterialLibarary.append(strMaterialLibarary);
+
+			if (!fs::exists(pathMaterialLibarary)) {
+				continue;
+			}
+
+			auto pReader = new _file_reader();
+			if (!pReader->open(pathMaterialLibarary.string().c_str())) {
+				THROW_ERROR(_err::_file);
+			}
+
+			char ch = pReader->getChar();
+
+			if (ch == EOF) {
+				THROW_ERROR(_err::_file);
+			}
+
+			vector<string> vecTokens;
+			string strMaterial;			
+
+			string strLine;
+			while (ch != EOF) {
+				if ((ch == LF) || (ch == CR)) {
+					if (strLine.find("#") == 0) {
+						// Comment
+						getLog()->logWrite(enumLogEvent::info, strLine);
+					} else if (strLine.find("newmtl ") == 0) {
+						// Material
+						_string::split(strLine, " ", vecTokens, false);
+						VERIFY_EXPRESSION(vecTokens.size() == 2);
+
+						strMaterial = vecTokens[1];
+					} else if (strLine.find("Ka ") == 0) {
+						// Ka
+						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
+						getLog()->logWrite(enumLogEvent::info, strLine);
+					} else if (strLine.find("Kd ") == 0) {
+						// Kd
+						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
+						getLog()->logWrite(enumLogEvent::info, strLine);
+					} else if (strLine.find("Kd ") == 0) {
+						// Ks
+						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
+						getLog()->logWrite(enumLogEvent::info, strLine);
+					} else if (strLine.find("d ") == 0) {
+						// d
+						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
+						getLog()->logWrite(enumLogEvent::info, strLine);
+					} else if (strLine.find("illum ") == 0) {
+						// illum
+						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
+						getLog()->logWrite(enumLogEvent::info, strLine);
+					} else if (strLine.find("Ns ") == 0) {
+						// Ns
+						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
+						getLog()->logWrite(enumLogEvent::info, strLine);
+					} else if (strLine.find("map_Kd ") == 0) {
+						// map_Kd (Texture)
+						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
+
+						_string::split(strLine, " ", vecTokens, false);
+						VERIFY_EXPRESSION(vecTokens.size() == 2);
+
+						string strTexture = vecTokens[1];
+						strMaterial = "";
+					} else {
+						string strWarning = "Not support element: '";
+						strWarning += strLine.substr(0, 10);
+						strWarning += "...'";
+						getLog()->logWrite(enumLogEvent::warning, strWarning);
+					}
+					
+					strLine = "";
+
+					ch = pReader->getNextChar(false);
+					continue;
+				}
+
+				strLine += ch;
+				ch = pReader->getNextChar(false);
+			}
+
+			delete pReader;
+		} // for (const auto& strMaterialLibarary : ...
+	}
+
+	void _exporter::createDefaultMaterial()
+	{
+
+	}
+
+	OwlInstance _exporter::getDefaultMaterialInstance()
+	{
+		if (m_iDefaultMaterialInstance == 0) {
+			createDefaultMaterial();
+		}
+
+		return m_iDefaultMaterialInstance;
 	}
 };

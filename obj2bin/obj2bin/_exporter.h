@@ -30,7 +30,8 @@ namespace _obj2bin
 
 		// Materials
 		set<string> m_setMaterialLibraries;
-		vector<string> m_setMaterials;
+		set<string> m_setMaterials;
+		OwlInstance m_iDefaultMaterialInstance;
 
 		// Input
 		vector<double> m_vecVertices;
@@ -54,7 +55,11 @@ namespace _obj2bin
 
 	private: // Methods
 
-		void processLine(const string& strLine);
+		void processOBJLine(const string& strLine);
+
+		void loadMaterials();
+		void createDefaultMaterial();
+		OwlInstance getDefaultMaterialInstance();
 	};
 };
 
