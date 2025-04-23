@@ -6,7 +6,11 @@
 // ************************************************************************************************
 namespace _obj2bin
 {
-	// ************************************************************************************************
+	// ********************************************************************************************
+	static const char default_material_name[] = "Default Material";
+	static const char default_color_name[] = "Default Color";
+
+	// ********************************************************************************************
 	_exporter::_exporter(const char* szInputFile, const char* szOutputFile)
 		: _log_client()
 		, m_iModel(0)
@@ -142,7 +146,13 @@ namespace _obj2bin
 				m_vecBRepTextureUVs.size());
 		}		
 
-		OwlInstance owlMaterialInstance = CreateInstance(GetClassByName(m_iModel, "Material"));
+		SetObjectProperty(
+			owlBRepInstance, 
+			GetPropertyByName(m_iModel, 
+				"material"), 
+			getDefaultMaterialInstance());
+
+		/*OwlInstance owlMaterialInstance = CreateInstance(GetClassByName(m_iModel, "Material"));
 		SetObjectProperty(owlBRepInstance, GetPropertyByName(m_iModel, "material"), owlMaterialInstance);
 
 		OwlInstance owlTextureInstance = CreateInstance(GetClassByName(m_iModel, "Texture"));
@@ -152,7 +162,7 @@ namespace _obj2bin
 		szMaterial[0] = new char[strlen("material_0.png") + 1];
 		strcpy(szMaterial[0], "material_0.png");
 
-		SetDatatypeProperty(owlTextureInstance, GetPropertyByName(m_iModel, "name"), (void**)szMaterial, 1);
+		SetDatatypeProperty(owlTextureInstance, GetPropertyByName(m_iModel, "name"), (void**)szMaterial, 1);*/
 
 		SaveModel(m_iModel, m_strOutputFile.c_str());
 	}
@@ -250,31 +260,31 @@ namespace _obj2bin
 
 						strMaterial = vecTokens[1];
 					} else if (strLine.find("Ka ") == 0) {
-						// Ka
+						// Ambient color
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
 						getLog()->logWrite(enumLogEvent::info, strLine);
 					} else if (strLine.find("Kd ") == 0) {
-						// Kd
+						// Diffuse color
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
 						getLog()->logWrite(enumLogEvent::info, strLine);
-					} else if (strLine.find("Kd ") == 0) {
-						// Ks
-						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
-						getLog()->logWrite(enumLogEvent::info, strLine);
-					} else if (strLine.find("d ") == 0) {
-						// d
-						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
-						getLog()->logWrite(enumLogEvent::info, strLine);
-					} else if (strLine.find("illum ") == 0) {
-						// illum
+					} else if (strLine.find("Ks ") == 0) {
+						// Specular color
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
 						getLog()->logWrite(enumLogEvent::info, strLine);
 					} else if (strLine.find("Ns ") == 0) {
-						// Ns
+						// Specular exponent weight
+						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
+						getLog()->logWrite(enumLogEvent::info, strLine);
+					} else if (strLine.find("d ") == 0) {
+						// Transparency
+						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
+						getLog()->logWrite(enumLogEvent::info, strLine);
+					} else if (strLine.find("illum ") == 0) {
+						// Illumination model
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
 						getLog()->logWrite(enumLogEvent::info, strLine);
 					} else if (strLine.find("map_Kd ") == 0) {
-						// map_Kd (Texture)
+						// Texture
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
 
 						_string::split(strLine, " ", vecTokens, false);
@@ -305,7 +315,59 @@ namespace _obj2bin
 
 	void _exporter::createDefaultMaterial()
 	{
+		m_iDefaultMaterialInstance = CreateInstance(GetClassByName(m_iModel, "Material"));
+		VERIFY_INSTANCE(m_iDefaultMaterialInstance);
 
+		OwlInstance owlColorInstance = CreateInstance(GetClassByName(m_iModel, "Color"));
+		VERIFY_INSTANCE(owlColorInstance);
+
+		SetObjectProperty(
+			m_iDefaultMaterialInstance,
+			GetPropertyByName(m_iModel, "color"),
+			&owlColorInstance,
+			1);
+
+		OwlInstance owlColorComponentInstance = createColorComponentInstance(default_color_name, 0., 0., 1.);
+		VERIFY_INSTANCE(owlColorComponentInstance);
+
+		SetObjectProperty(
+			owlColorInstance,
+			GetPropertyByName(m_iModel, "ambient"),
+			&owlColorComponentInstance,
+			1);
+
+		double dTransparency = 0.25;
+		SetDatatypeProperty(
+			owlColorInstance,
+			GetPropertyByName(m_iModel, "transparency"),
+			&dTransparency,
+			1);
+	}
+
+	OwlInstance _exporter::createColorComponentInstance(const string& strName, double dR, double dG, double dB)
+	{
+		OwlInstance owlColorComponentInstance = CreateInstance(GetClassByName(m_iModel, "ColorComponent"));
+		VERIFY_INSTANCE(owlColorComponentInstance);
+
+		SetDatatypeProperty(
+			owlColorComponentInstance,
+			GetPropertyByName(m_iModel, "R"),
+			&dR,
+			1);
+
+		SetDatatypeProperty(
+			owlColorComponentInstance,
+			GetPropertyByName(m_iModel, "G"),
+			&dG,
+			1);
+
+		SetDatatypeProperty(
+			owlColorComponentInstance,
+			GetPropertyByName(m_iModel, "B"),
+			&dB,
+			1);
+
+		return owlColorComponentInstance;
 	}
 
 	OwlInstance _exporter::getDefaultMaterialInstance()

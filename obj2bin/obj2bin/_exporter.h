@@ -59,7 +59,9 @@ namespace _obj2bin
 
 		void loadMaterials();
 		void createDefaultMaterial();
+		OwlInstance createColorComponentInstance(const string& strName, double dR, double dG, double dB);
 		OwlInstance getDefaultMaterialInstance();
+		
 	};
 };
 
