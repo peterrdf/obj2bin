@@ -33,7 +33,7 @@ namespace _obj2bin
 		// Materials
 		set<string> m_setMaterialLibraries;
 		vector<string> m_vecMaterials;
-		map<string, _material*> m_mapMaterials;
+		map<string, pair<_material*, OwlInstance>> m_mapMaterials;
 		OwlInstance m_iDefaultMaterialInstance;
 
 		// Input

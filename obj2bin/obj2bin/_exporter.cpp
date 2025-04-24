@@ -44,7 +44,7 @@ namespace _obj2bin
 		}
 
 		for (auto& itMaterial : m_mapMaterials) {
-			delete itMaterial.second;
+			delete itMaterial.second.first;
 		}
 	}
 
@@ -156,7 +156,7 @@ namespace _obj2bin
 			owlBRepInstance, 
 			GetPropertyByName(m_iModel, 
 				"material"), 
-			getMaterialInstance());		
+			getMaterialInstance());
 
 		SaveModel(m_iModel, m_strOutputFile.c_str());
 	}
@@ -287,7 +287,7 @@ namespace _obj2bin
 						
 						auto pMaterial = new _material(0, 0, 0, 0, 1.f, (LPCWSTR)CA2W(vecTokens[1].c_str())); //#todo: materials without texture
 						VERIFY_EXPRESSION(m_mapMaterials.find(strMaterial) == m_mapMaterials.end());
-						m_mapMaterials[strMaterial] = pMaterial;
+						m_mapMaterials[strMaterial] = { pMaterial, 0 };
 
 						strMaterial = "";
 					} else {
@@ -387,31 +387,35 @@ namespace _obj2bin
 		if (itMaterial == m_mapMaterials.end()) {
 			string stError = "Unknown material: '";
 			stError += m_vecMaterials.back();
+			stError += "'";
 			getLog()->logWrite(enumLogEvent::error, stError);
 
 			return getDefaultMaterialInstance();
 		}
 
-		if (!itMaterial->second->hasTexture()) {
+		if (!itMaterial->second.first->hasTexture()) {
 			string stError = "Not supported material: '";
 			stError += m_vecMaterials.back();
+			stError += "'";
 			getLog()->logWrite(enumLogEvent::error, stError);
 
 			return getDefaultMaterialInstance();
 		}
 
-		string strTexture = (LPCSTR)CW2A(itMaterial->second->texture().c_str());
+		if (itMaterial->second.second == 0) {
+			string strTexture = (LPCSTR)CW2A(itMaterial->second.first->texture().c_str());
 
-		char** szTexture = new char* [1];
-		szTexture[0] = new char[strlen(strTexture.c_str()) + 1];
-		strcpy(szTexture[0], strTexture.c_str());
+			char** szTexture = new char* [1];
+			szTexture[0] = new char[strlen(strTexture.c_str()) + 1];
+			strcpy(szTexture[0], strTexture.c_str());
 
-		OwlInstance owlTextureInstance = CreateInstance(GetClassByName(m_iModel, "Texture"));
-		SetDatatypeProperty(owlTextureInstance, GetPropertyByName(m_iModel, "name"), (void**)szTexture, 1);
+			OwlInstance owlTextureInstance = CreateInstance(GetClassByName(m_iModel, "Texture"));
+			SetDatatypeProperty(owlTextureInstance, GetPropertyByName(m_iModel, "name"), (void**)szTexture, 1);
 
-		OwlInstance owlMaterialInstance = CreateInstance(GetClassByName(m_iModel, "Material"));			
-		SetObjectProperty(owlMaterialInstance, GetPropertyByName(m_iModel, "textures"), owlTextureInstance);
+			itMaterial->second.second = CreateInstance(GetClassByName(m_iModel, "Material"));
+			SetObjectProperty(itMaterial->second.second, GetPropertyByName(m_iModel, "textures"), owlTextureInstance);
+		}
 
-		return owlMaterialInstance;
+		return itMaterial->second.second;
 	}
 };
