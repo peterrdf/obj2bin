@@ -10,9 +10,11 @@
 #include "_io.h"
 #include "_errors.h"
 #include "_reader.h"
+#include "_material.h"
 
 #include <set>
 #include <map>
+#include <vector>
 using namespace std;
 
 // ************************************************************************************************
@@ -30,7 +32,8 @@ namespace _obj2bin
 
 		// Materials
 		set<string> m_setMaterialLibraries;
-		set<string> m_setMaterials;
+		vector<string> m_vecMaterials;
+		map<string, _material*> m_mapMaterials;
 		OwlInstance m_iDefaultMaterialInstance;
 
 		// Input
@@ -57,11 +60,11 @@ namespace _obj2bin
 
 		void processOBJLine(const string& strLine);
 
-		void loadMaterials();
-		void createDefaultMaterial();
+		void loadMaterials();		
 		OwlInstance createColorComponentInstance(const string& strName, double dR, double dG, double dB);
+		void createDefaultMaterial();
 		OwlInstance getDefaultMaterialInstance();
-		
+		OwlInstance getMaterialInstance();
 	};
 };
 

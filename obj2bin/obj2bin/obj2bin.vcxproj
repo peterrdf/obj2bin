@@ -156,6 +156,7 @@
     <ClInclude Include="..\..\include\_errors.h" />
     <ClInclude Include="..\..\include\_io.h" />
     <ClInclude Include="..\..\include\_log.h" />
+    <ClInclude Include="..\..\include\_material.h" />
     <ClInclude Include="..\..\include\_reader.h" />
     <ClInclude Include="..\..\include\_string.h" />
     <ClInclude Include="..\..\include\_time.h" />

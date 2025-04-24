@@ -54,6 +54,9 @@
     <ClInclude Include="..\..\include\engine.h">
       <Filter>Include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\_material.h">
+      <Filter>Include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "_exporter.h"
 
+#include <atlstr.h>
 #include "_string.h"
 
 // ************************************************************************************************
@@ -17,7 +18,8 @@ namespace _obj2bin
 		, m_strInputFile()
 		, m_strOutputFile()
 		, m_setMaterialLibraries()
-		, m_setMaterials()
+		, m_vecMaterials()
+		, m_mapMaterials()
 		, m_iDefaultMaterialInstance(0)
 		, m_vecVertices()
 		, m_vecNormals()
@@ -39,6 +41,10 @@ namespace _obj2bin
 	{
 		if (m_iModel != 0) {
 			CloseModel(m_iModel);
+		}
+
+		for (auto& itMaterial : m_mapMaterials) {
+			delete itMaterial.second;
 		}
 	}
 
@@ -150,19 +156,7 @@ namespace _obj2bin
 			owlBRepInstance, 
 			GetPropertyByName(m_iModel, 
 				"material"), 
-			getDefaultMaterialInstance());
-
-		/*OwlInstance owlMaterialInstance = CreateInstance(GetClassByName(m_iModel, "Material"));
-		SetObjectProperty(owlBRepInstance, GetPropertyByName(m_iModel, "material"), owlMaterialInstance);
-
-		OwlInstance owlTextureInstance = CreateInstance(GetClassByName(m_iModel, "Texture"));
-		SetObjectProperty(owlMaterialInstance, GetPropertyByName(m_iModel, "textures"), owlTextureInstance);
-
-		char** szMaterial = new char* [1];
-		szMaterial[0] = new char[strlen("material_0.png") + 1];
-		strcpy(szMaterial[0], "material_0.png");
-
-		SetDatatypeProperty(owlTextureInstance, GetPropertyByName(m_iModel, "name"), (void**)szMaterial, 1);*/
+			getMaterialInstance());		
 
 		SaveModel(m_iModel, m_strOutputFile.c_str());
 	}
@@ -185,7 +179,7 @@ namespace _obj2bin
 			_string::split(strLine, " ", vecTokens, false);
 			VERIFY_EXPRESSION(vecTokens.size() == 2);
 
-			m_setMaterials.insert(vecTokens[1]);
+			m_vecMaterials.push_back(vecTokens[1]); //#todo: multiple materials
 		} else if (strLine.find("v ") == 0) {
 			// Vertex
 			_string::split(strLine, " ", vecTokens, false);
@@ -286,11 +280,15 @@ namespace _obj2bin
 					} else if (strLine.find("map_Kd ") == 0) {
 						// Texture
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
+						getLog()->logWrite(enumLogEvent::info, strLine);
 
 						_string::split(strLine, " ", vecTokens, false);
 						VERIFY_EXPRESSION(vecTokens.size() == 2);
+						
+						auto pMaterial = new _material(0, 0, 0, 0, 1.f, (LPCWSTR)CA2W(vecTokens[1].c_str())); //#todo: materials without texture
+						VERIFY_EXPRESSION(m_mapMaterials.find(strMaterial) == m_mapMaterials.end());
+						m_mapMaterials[strMaterial] = pMaterial;
 
-						string strTexture = vecTokens[1];
 						strMaterial = "";
 					} else {
 						string strWarning = "Not support element: '";
@@ -377,5 +375,43 @@ namespace _obj2bin
 		}
 
 		return m_iDefaultMaterialInstance;
+	}
+
+	OwlInstance _exporter::getMaterialInstance()
+	{
+		if (m_vecMaterials.empty()) {
+			return getDefaultMaterialInstance();
+		}
+
+		auto itMaterial = m_mapMaterials.find(m_vecMaterials.back());
+		if (itMaterial == m_mapMaterials.end()) {
+			string stError = "Unknown material: '";
+			stError += m_vecMaterials.back();
+			getLog()->logWrite(enumLogEvent::error, stError);
+
+			return getDefaultMaterialInstance();
+		}
+
+		if (!itMaterial->second->hasTexture()) {
+			string stError = "Not supported material: '";
+			stError += m_vecMaterials.back();
+			getLog()->logWrite(enumLogEvent::error, stError);
+
+			return getDefaultMaterialInstance();
+		}
+
+		string strTexture = (LPCSTR)CW2A(itMaterial->second->texture().c_str());
+
+		char** szTexture = new char* [1];
+		szTexture[0] = new char[strlen(strTexture.c_str()) + 1];
+		strcpy(szTexture[0], strTexture.c_str());
+
+		OwlInstance owlTextureInstance = CreateInstance(GetClassByName(m_iModel, "Texture"));
+		SetDatatypeProperty(owlTextureInstance, GetPropertyByName(m_iModel, "name"), (void**)szTexture, 1);
+
+		OwlInstance owlMaterialInstance = CreateInstance(GetClassByName(m_iModel, "Material"));			
+		SetObjectProperty(owlMaterialInstance, GetPropertyByName(m_iModel, "textures"), owlTextureInstance);
+
+		return owlMaterialInstance;
 	}
 };
