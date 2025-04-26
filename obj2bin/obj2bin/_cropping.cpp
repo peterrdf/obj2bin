@@ -108,7 +108,7 @@ namespace _obj2bin
 
 					m_mapFaceFilter[iFace + 1] = bFilter;
 				} // for (size_t iFace = ...
-			} // Top-Right
+			} // Left
 
 			// Right
 			{
@@ -157,14 +157,14 @@ namespace _obj2bin
 						_vector3f v1(dX1, dY1, dZ1);
 						_vector3f v2(dX2, dY2, dZ2);
 						_vector3f normal = v2.cross(v1);
-						if (normal.getX() < 0) {
+						if ((normal.getX() < 0) && !m_mapFaceFilter.at(iFace + 1)) {
 							bFilter = true;
 						}
 					}
 
 					m_mapFaceFilter[iFace + 1] = bFilter;
 				} // for (size_t iFace = ...
-			} // Top-Right
+			} // Right
 		}
 		// Front
 	}
