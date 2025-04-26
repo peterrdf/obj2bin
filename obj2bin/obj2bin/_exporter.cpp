@@ -1,8 +1,10 @@
 #include "pch.h"
 #include "_exporter.h"
 
-#include <atlstr.h>
+#include "_cropping.h"
 #include "_string.h"
+
+#include <atlstr.h>
 
 // ************************************************************************************************
 namespace _obj2bin
@@ -57,6 +59,14 @@ namespace _obj2bin
 		load();
 
 		//
+		// Cropping
+		//
+
+		m_pCropping = new _cropping(m_strInputFile.c_str(), m_strOutputFile.c_str());
+		m_pCropping->setLog(getLog());
+		m_pCropping->execute();
+
+		//
 		// Materials
 		//
 
@@ -68,6 +78,10 @@ namespace _obj2bin
 
 		int64_t iIndex = 0;
 		for (size_t iFace = 0; iFace < m_vecFaces.size(); iFace++) {
+			if (m_pCropping->isFaceFiltered(iFace + 1)) {
+				continue;
+			}
+
 			vector<string> vecTokens;
 			_string::split(m_vecFaces[iFace], " ", vecTokens, false);
 			VERIFY_EXPRESSION(vecTokens.size() == 4);

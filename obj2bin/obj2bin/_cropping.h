@@ -32,7 +32,11 @@ namespace _obj2bin
 	private: // Methods
 
 		void calculateBB();
-		void run();		
+		void run();
+
+	public: // Properties
+
+		bool isFaceFiltered(int64_t iFace) const;
 	};
 };
 

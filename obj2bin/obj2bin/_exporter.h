@@ -21,6 +21,9 @@ using namespace std;
 namespace _obj2bin
 {
 	// ********************************************************************************************
+	class _cropping;
+
+	// ********************************************************************************************
 	class _exporter : public _log_client
 	{
 
@@ -42,12 +45,14 @@ namespace _obj2bin
 		vector<double> m_vecTextureUVs;
 		vector<string> m_vecFaces;
 
+		// Cropping
+		_cropping* m_pCropping;
+
 		// BRep
 		vector<int64_t> m_vecBRepIndices;
 		vector<double> m_vecBRepVertices;
 		vector<double> m_vecBRepNormals;
-		vector<double> m_vecBRepTextureUVs;
-		
+		vector<double> m_vecBRepTextureUVs;		
 
 	public: // Methods
 

@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\engdef.h" />
     <ClInclude Include="..\..\include\engine.h" />
+    <ClInclude Include="..\..\include\_3DUtils.h" />
     <ClInclude Include="..\..\include\_errors.h" />
     <ClInclude Include="..\..\include\_io.h" />
     <ClInclude Include="..\..\include\_log.h" />
