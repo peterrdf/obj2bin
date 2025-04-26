@@ -57,6 +57,9 @@
     <ClInclude Include="..\..\include\_material.h">
       <Filter>Include</Filter>
     </ClInclude>
+    <ClInclude Include="_cropping.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -73,6 +76,9 @@
     </ClCompile>
     <ClCompile Include="..\..\include\_reader.cpp">
       <Filter>Include</Filter>
+    </ClCompile>
+    <ClCompile Include="_cropping.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

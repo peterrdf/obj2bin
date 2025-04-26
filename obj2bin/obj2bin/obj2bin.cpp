@@ -3,6 +3,7 @@
 
 #include "_log.h"
 #include "_exporter.h"
+#include "_cropping.h"
 
 #ifdef _WINDOWS
 #include <experimental/filesystem>
@@ -28,9 +29,13 @@ extern "C" {
 	{
 		_c_log log(g_pLogCallback);
 
-		_obj2bin::_exporter exporter(szInputFile, szOutputFile);
+		_obj2bin::_cropping cropping(szInputFile, szOutputFile);
+		cropping.setLog(&log);
+		cropping.execute();
+
+		/*_obj2bin::_exporter exporter(szInputFile, szOutputFile);
 		exporter.setLog(&log);
-		exporter.execute();
+		exporter.execute();*/
 	}
 #ifdef __cplusplus
 };

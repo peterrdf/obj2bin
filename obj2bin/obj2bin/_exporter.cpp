@@ -48,34 +48,13 @@ namespace _obj2bin
 		}
 	}
 
-	void _exporter::execute()
+	/*virtual*/ void _exporter::execute()
 	{
-		auto pReader = new _file_reader();
-		if (!pReader->open(m_strInputFile.c_str())) {
-			THROW_ERROR(_err::_file);
-		}
+		//
+		// OBJ
+		//
 
-		char ch = pReader->getChar();
-
-		if (ch == EOF) {
-			THROW_ERROR(_err::_file);
-		}
-
-		string strLine;
-		while (ch != EOF) {
-			if ((ch == LF) || (ch == CR)) {
-				processOBJLine(strLine);
-				strLine = "";
-
-				ch = pReader->getNextChar(false);
-				continue;
-			}
-
-			strLine += ch;
-			ch = pReader->getNextChar(false);
-		}
-
-		delete pReader;
+		load();
 
 		//
 		// Materials
@@ -159,6 +138,36 @@ namespace _obj2bin
 			getMaterialInstance());
 
 		SaveModel(m_iModel, m_strOutputFile.c_str());
+	}
+
+	void _exporter::load()
+	{
+		auto pReader = new _file_reader();
+		if (!pReader->open(m_strInputFile.c_str())) {
+			THROW_ERROR(_err::_file);
+		}
+
+		char ch = pReader->getChar();
+
+		if (ch == EOF) {
+			THROW_ERROR(_err::_file);
+		}
+
+		string strLine;
+		while (ch != EOF) {
+			if ((ch == LF) || (ch == CR)) {
+				processOBJLine(strLine);
+				strLine = "";
+
+				ch = pReader->getNextChar(false);
+				continue;
+			}
+
+			strLine += ch;
+			ch = pReader->getNextChar(false);
+		}
+
+		delete pReader;
 	}
 
 	void _exporter::processOBJLine(const string& strLine)

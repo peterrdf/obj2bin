@@ -24,7 +24,7 @@ namespace _obj2bin
 	class _exporter : public _log_client
 	{
 
-	private: // Members
+	protected: // Fields
 
 		OwlModel m_iModel;
 		string m_strInputFile;
@@ -54,7 +54,11 @@ namespace _obj2bin
 		_exporter(const char* szInputFile, const char* szOutputFile);
 		virtual ~_exporter();
 
-		void execute();
+		virtual void execute();
+
+	protected: // Methods
+
+		void load();
 
 	private: // Methods
 
