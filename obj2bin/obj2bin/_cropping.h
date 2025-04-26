@@ -19,6 +19,7 @@ namespace _obj2bin
 		double m_dBBZMax;
 
 		map<int64_t, bool> m_mapVertexFilter;
+		map<int64_t, bool> m_mapFaceFilter;
 
 	public: // Methods
 

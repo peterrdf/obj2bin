@@ -13,6 +13,7 @@ namespace _obj2bin
 		, m_dBBYMax(1)
 		, m_dBBZMax(1)
 		, m_mapVertexFilter()
+		, m_mapFaceFilter()
 	{
 	}
 
@@ -25,9 +26,7 @@ namespace _obj2bin
 		load();
 
 		run();
-
-		// Front-Top-Left
-	}	
+	}
 
 	void _cropping::calculateBB()
 	{
@@ -50,5 +49,56 @@ namespace _obj2bin
 	void _cropping::run()
 	{
 		calculateBB();
+
+		// Front
+		{
+			// Top-Right
+			{
+				double dXMin = (m_dBBXMin + m_dBBXMax) / 2.;
+				double dXMax = m_dBBXMax;
+				double dYMin = (m_dBBYMin + m_dBBYMax) / 2.;
+				double dYMax = m_dBBYMax;
+				double dZMin = m_dBBZMin;
+				double dZMax = (m_dBBZMin + m_dBBZMax) / 2.;
+
+				for (size_t iVertex = 0; iVertex < m_vecVertices.size() / 3; iVertex += 3) {
+					double dX = m_vecVertices[(iVertex * 3) + 0];
+					double dY = m_vecVertices[(iVertex * 3) + 1];
+					double dZ = m_vecVertices[(iVertex * 3) + 2];
+
+					bool bFilter = false;
+					if ((dX < dXMin) || (dX > dXMin) ||
+						(dY < dYMin) || (dY > dYMin) ||
+						(dZ < dZMin) || (dX > dZMin)) {
+						bFilter = true;
+					}
+
+					m_mapVertexFilter[iVertex + 1] = bFilter;
+				}
+			} // Top-Right
+		}
+		// Front
+
+		///////////////////////////////////////////////////////////////////////
+
+		for (size_t iFace = 0; iFace < m_vecFaces.size(); iFace++) {
+			vector<string> vecTokens;
+			_string::split(m_vecFaces[iFace], " ", vecTokens, false);
+			VERIFY_EXPRESSION(vecTokens.size() == 4);
+
+			for (size_t iFaceVertex = 1; iFaceVertex < vecTokens.size(); iFaceVertex++) {
+				vector<string> vecFaceVertex;
+				_string::split(vecTokens[iFaceVertex], "/", vecFaceVertex, false);
+				VERIFY_EXPRESSION(vecFaceVertex.size() == 3);
+
+				int64_t iVertexIndex = atol(vecFaceVertex[0].c_str());
+				if (m_mapVertexFilter[iVertexIndex]) {
+					m_mapFaceFilter[iFace + 1] = true;
+					break;
+				} else {
+					m_mapFaceFilter[iFace + 1] = false;
+				}				
+			}
+		} // for (size_t iFace = ...
 	}
 };
