@@ -33,9 +33,9 @@ extern "C" {
 		cropping.setLog(&log);
 		cropping.execute();
 
-		/*_obj2bin::_exporter exporter(szInputFile, szOutputFile);
+		_obj2bin::_exporter exporter(szInputFile, szOutputFile);
 		exporter.setLog(&log);
-		exporter.execute();*/
+		exporter.execute();
 	}
 #ifdef __cplusplus
 };

@@ -12,6 +12,7 @@ namespace _obj2bin
 		, m_dBBXMax(1)
 		, m_dBBYMax(1)
 		, m_dBBZMax(1)
+		, m_mapVertexFilter()
 	{
 	}
 
@@ -24,6 +25,8 @@ namespace _obj2bin
 		load();
 
 		run();
+
+		// Front-Top-Left
 	}	
 
 	void _cropping::calculateBB()

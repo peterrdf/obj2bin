@@ -18,6 +18,8 @@ namespace _obj2bin
 		double m_dBBYMax;
 		double m_dBBZMax;
 
+		map<int64_t, bool> m_mapVertexFilter;
+
 	public: // Methods
 
 		_cropping(const char* szInputFile, const char* szOutputFile);
