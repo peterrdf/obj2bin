@@ -81,22 +81,175 @@ namespace _obj2bin
 		// Find nearest vertex
 		// 
 
+		//double dCenterX = (m_dBBXMin + m_dBBXMax) / 2.;
+		//double dCenterY = (m_dBBYMin + m_dBBYMax) / 2.;
+		//double dCenterZ = (m_dBBZMin + m_dBBZMax) / 2.;
+
+		//int64_t iNearestVertex = -1;
+		//double dMinDistance = DBL_MAX;
+		//int64_t iNearestVertexMaxX = -1;
+		//double dMinDistanceMaxX = DBL_MAX;
+		//double dMinDistanceMaxY = DBL_MAX;
+		//for (size_t iVertex = 0; iVertex < m_vecVertices.size() / 3; iVertex += 3) {
+		//	double dDistance = sqrt(
+		//		pow(dCenterX - m_vecVertices[(iVertex * 3) + 0], 2.) +
+		//		pow(dCenterY - m_vecVertices[(iVertex * 3) + 1], 2.) +
+		//		pow(dCenterZ - m_vecVertices[(iVertex * 3) + 2], 2.));
+
+		//	if (dDistance < dMinDistance) {
+		//		dMinDistance = dDistance;
+		//		iNearestVertex = iVertex;
+		//	}
+
+		//	// MaxY
+		//	auto itVertex2Faces = m_mapVertex2Faces.find(iVertex);
+		//	VERIFY_EXPRESSION(itVertex2Faces != m_mapVertex2Faces.end());
+
+		//	for (auto iFace : itVertex2Faces->second) {
+		//		vector<string> vecTokens;
+		//		_string::split(m_vecFaces[iFace], " ", vecTokens, false);
+		//		VERIFY_EXPRESSION(vecTokens.size() == 4);
+
+		//		for (size_t iFaceVertex = 1; iFaceVertex < vecTokens.size(); iFaceVertex++) {
+		//			vector<string> vecFaceVertex;
+		//			_string::split(vecTokens[iFaceVertex], "/", vecFaceVertex, false);
+		//			VERIFY_EXPRESSION(vecFaceVertex.size() == 3);
+
+		//			if (iVertex == atol(vecFaceVertex[0].c_str()) - 1) {
+		//				long iNormalIndex = atol(vecFaceVertex[2].c_str()) - 1;
+
+		//				// X
+		//				{
+		//					if (m_vecNormals[(iNormalIndex * 3) + 0] < 0) {
+		//						if (dDistance < dMinDistanceMaxX) {
+		//							dMinDistanceMaxX = dDistance;
+		//						}
+		//					}
+		//				}
+
+		//				// Y
+		//				{							
+		//					if (m_vecNormals[(iNormalIndex * 3) + 1] > 0) {
+		//						if (dDistance < dMinDistanceMaxY) {
+		//							dMinDistanceMaxY = dDistance;
+		//						}
+		//					}
+		//				}						
+		//			}
+		//		}
+		//	}
+		//}
+
+		//
+		// Min Y
+		//
+
 		double dCenterX = (m_dBBXMin + m_dBBXMax) / 2.;
 		double dCenterY = (m_dBBYMin + m_dBBYMax) / 2.;
 		double dCenterZ = (m_dBBZMin + m_dBBZMax) / 2.;
 
 		int64_t iNearestVertex = -1;
-		double dMinDistance = DBL_MAX;
+		double dMinDistancePlusY = DBL_MAX;		
+		double dMinDistanceMinusY = DBL_MAX;
 		for (size_t iVertex = 0; iVertex < m_vecVertices.size() / 3; iVertex += 3) {
 			double dDistance = sqrt(
 				pow(dCenterX - m_vecVertices[(iVertex * 3) + 0], 2.) +
 				pow(dCenterY - m_vecVertices[(iVertex * 3) + 1], 2.) +
 				pow(dCenterZ - m_vecVertices[(iVertex * 3) + 2], 2.));
 
-			if (dDistance < dMinDistance) {
-				iNearestVertex = iVertex;
-			}
-		}
+			// MaxY
+			auto itVertex2Faces = m_mapVertex2Faces.find(iVertex);
+			VERIFY_EXPRESSION(itVertex2Faces != m_mapVertex2Faces.end());
+
+			for (auto iFace : itVertex2Faces->second) {
+				vector<string> vecTokens;
+				_string::split(m_vecFaces[iFace], " ", vecTokens, false);
+				VERIFY_EXPRESSION(vecTokens.size() == 4);
+
+				for (size_t iFaceVertex = 1; iFaceVertex < vecTokens.size(); iFaceVertex++) {
+					vector<string> vecFaceVertex;
+					_string::split(vecTokens[iFaceVertex], "/", vecFaceVertex, false);
+					VERIFY_EXPRESSION(vecFaceVertex.size() == 3);
+
+					if (iVertex == atol(vecFaceVertex[0].c_str()) - 1) {
+						long iNormalIndex = atol(vecFaceVertex[2].c_str()) - 1;
+
+						// Y+
+						{
+							if (m_vecNormals[(iNormalIndex * 3) + 1] > 0) {
+								if (dDistance < dMinDistancePlusY) {
+									dMinDistancePlusY = dDistance;
+									iNearestVertex = iVertex;
+								}
+							}
+						}
+
+						// Y-
+						{
+							if (m_vecNormals[(iNormalIndex * 3) + 1] < 0) {
+								if (dDistance < dMinDistanceMinusY) {
+									dMinDistanceMinusY = dDistance;
+									iNearestVertex = iVertex;
+								}
+							}
+						}
+					}
+				} // for (size_t iFaceVertex = ...
+			} // for (auto iFace : 
+		} // for (size_t iVertex = ...
+
+		//
+		// Min X
+		//
+
+		const double STEP = (m_dBBYMax - m_dBBYMin) * .1; // 10%
+
+		set<double> setDistancesX;
+		for (double dY = dMinDistanceMinusY; dY < ((m_dBBYMin + m_dBBYMax) / 2.) + dMinDistancePlusY; dY += STEP) {
+			double dCenterX = (m_dBBXMin + m_dBBXMax) / 2.;
+			double dCenterY = dY;
+			double dCenterZ = (m_dBBZMin + m_dBBZMax) / 2.;
+
+			double dMinDistanceMaxX = DBL_MAX;
+			for (size_t iVertex = 0; iVertex < m_vecVertices.size() / 3; iVertex += 3) {
+				double dDistance = sqrt(
+					pow(dCenterX - m_vecVertices[(iVertex * 3) + 0], 2.) +
+					pow(dCenterY - m_vecVertices[(iVertex * 3) + 1], 2.) +
+					pow(dCenterZ - m_vecVertices[(iVertex * 3) + 2], 2.));
+
+				// MaxY
+				auto itVertex2Faces = m_mapVertex2Faces.find(iVertex);
+				VERIFY_EXPRESSION(itVertex2Faces != m_mapVertex2Faces.end());
+
+				for (auto iFace : itVertex2Faces->second) {
+					vector<string> vecTokens;
+					_string::split(m_vecFaces[iFace], " ", vecTokens, false);
+					VERIFY_EXPRESSION(vecTokens.size() == 4);
+
+					for (size_t iFaceVertex = 1; iFaceVertex < vecTokens.size(); iFaceVertex++) {
+						vector<string> vecFaceVertex;
+						_string::split(vecTokens[iFaceVertex], "/", vecFaceVertex, false);
+						VERIFY_EXPRESSION(vecFaceVertex.size() == 3);
+
+						if (iVertex == atol(vecFaceVertex[0].c_str()) - 1) {
+							long iNormalIndex = atol(vecFaceVertex[2].c_str()) - 1;
+
+							// X
+							{
+								if (m_vecNormals[(iNormalIndex * 3) + 0] > 0) {
+									if (dDistance < dMinDistanceMaxX) {
+										dMinDistanceMaxX = dDistance;
+									}
+								}
+							}
+						}
+					} // for (size_t iFaceVertex = ...
+				} // for (auto iFace : ...
+
+				setDistancesX.insert(dMinDistanceMaxX);
+			} // for (auto iVertex : ...
+		} // for (double dY = ...
+
 		VERIFY_EXPRESSION(iNearestVertex != -1);
 
 		auto itVertex2Faces = m_mapVertex2Faces.find(iNearestVertex);
@@ -261,6 +414,7 @@ namespace _obj2bin
 			auto itVertex2Faces = m_mapVertex2Faces.find(iVertex1);
 			VERIFY_EXPRESSION(itVertex2Faces != m_mapVertex2Faces.end());
 
+			if ((m_vecVertices[(iVertex1 * 3) + 1] < ((m_dBBYMin + m_dBBYMax) / 2.) + 0.03))
 			vecFaceNeighbors.insert(vecFaceNeighbors.end(), itVertex2Faces->second.begin(), itVertex2Faces->second.end());
 		}		
 
@@ -275,6 +429,7 @@ namespace _obj2bin
 			auto itVertex2Faces = m_mapVertex2Faces.find(iVertex2);
 			VERIFY_EXPRESSION(itVertex2Faces != m_mapVertex2Faces.end());
 
+			if ((m_vecVertices[(iVertex2 * 3) + 1] < ((m_dBBYMin + m_dBBYMax) / 2.) + 0.03))
 			vecFaceNeighbors.insert(vecFaceNeighbors.end(), itVertex2Faces->second.begin(), itVertex2Faces->second.end());
 		}		
 
@@ -289,6 +444,7 @@ namespace _obj2bin
 			auto itVertex2Faces = m_mapVertex2Faces.find(iVertex3);
 			VERIFY_EXPRESSION(itVertex2Faces != m_mapVertex2Faces.end());
 
+			if ((m_vecVertices[(iVertex3 * 3) + 1] < ((m_dBBYMin + m_dBBYMax) / 2.) + 0.03))
 			vecFaceNeighbors.insert(vecFaceNeighbors.end(), itVertex2Faces->second.begin(), itVertex2Faces->second.end());
 		}		
 	}
