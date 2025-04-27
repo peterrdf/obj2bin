@@ -55,60 +55,60 @@ namespace _obj2bin
 		// Front
 		{
 			// Left
-			{
-				double dXMin = m_dBBXMin;
-				double dXMax = (m_dBBXMin + m_dBBXMax) / 2.;
+			//{
+			//	double dXMin = m_dBBXMin;
+			//	double dXMax = (m_dBBXMin + m_dBBXMax) / 2.;
 
-				for (size_t iFace = 0; iFace < m_vecFaces.size(); iFace++) {
-					vector<string> vecTokens;
-					_string::split(m_vecFaces[iFace], " ", vecTokens, false);
-					VERIFY_EXPRESSION(vecTokens.size() == 4);
+			//	for (size_t iFace = 0; iFace < m_vecFaces.size(); iFace++) {
+			//		vector<string> vecTokens;
+			//		_string::split(m_vecFaces[iFace], " ", vecTokens, false);
+			//		VERIFY_EXPRESSION(vecTokens.size() == 4);
 
-					// Vertex 1
-					vector<string> vecFaceVertex1;
-					_string::split(vecTokens[1], "/", vecFaceVertex1, false);
-					VERIFY_EXPRESSION(vecFaceVertex1.size() == 3);
+			//		// Vertex 1
+			//		vector<string> vecFaceVertex1;
+			//		_string::split(vecTokens[1], "/", vecFaceVertex1, false);
+			//		VERIFY_EXPRESSION(vecFaceVertex1.size() == 3);
 
-					long iVertex1 = atol(vecFaceVertex1[0].c_str()) - 1;
-					double dX1 = m_vecVertices[(iVertex1 * 3) + 0];
-					double dY1 = m_vecVertices[(iVertex1 * 3) + 1];
-					double dZ1 = m_vecVertices[(iVertex1 * 3) + 2];
+			//		long iVertex1 = atol(vecFaceVertex1[0].c_str()) - 1;
+			//		double dX1 = m_vecVertices[(iVertex1 * 3) + 0];
+			//		double dY1 = m_vecVertices[(iVertex1 * 3) + 1];
+			//		double dZ1 = m_vecVertices[(iVertex1 * 3) + 2];
 
-					// Vertex 2
-					vector<string> vecFaceVertex2;
-					_string::split(vecTokens[2], "/", vecFaceVertex2, false);
-					VERIFY_EXPRESSION(vecFaceVertex2.size() == 3);
+			//		// Vertex 2
+			//		vector<string> vecFaceVertex2;
+			//		_string::split(vecTokens[2], "/", vecFaceVertex2, false);
+			//		VERIFY_EXPRESSION(vecFaceVertex2.size() == 3);
 
-					long iVertex2 = atol(vecFaceVertex2[0].c_str()) - 1;
-					double dX2 = m_vecVertices[(iVertex2 * 3) + 0];
-					double dY2 = m_vecVertices[(iVertex2 * 3) + 1];
-					double dZ2 = m_vecVertices[(iVertex2 * 3) + 2];
+			//		long iVertex2 = atol(vecFaceVertex2[0].c_str()) - 1;
+			//		double dX2 = m_vecVertices[(iVertex2 * 3) + 0];
+			//		double dY2 = m_vecVertices[(iVertex2 * 3) + 1];
+			//		double dZ2 = m_vecVertices[(iVertex2 * 3) + 2];
 
-					// Vertex 3
-					vector<string> vecFaceVertex3;
-					_string::split(vecTokens[3], "/", vecFaceVertex3, false);
-					VERIFY_EXPRESSION(vecFaceVertex3.size() == 3);
+			//		// Vertex 3
+			//		vector<string> vecFaceVertex3;
+			//		_string::split(vecTokens[3], "/", vecFaceVertex3, false);
+			//		VERIFY_EXPRESSION(vecFaceVertex3.size() == 3);
 
-					long iVertex3 = atol(vecFaceVertex3[0].c_str()) - 1;
-					double dX3 = m_vecVertices[(iVertex3 * 3) + 0];
-					double dY3 = m_vecVertices[(iVertex3 * 3) + 1];
-					double dZ3 = m_vecVertices[(iVertex3 * 3) + 2];
+			//		long iVertex3 = atol(vecFaceVertex3[0].c_str()) - 1;
+			//		double dX3 = m_vecVertices[(iVertex3 * 3) + 0];
+			//		double dY3 = m_vecVertices[(iVertex3 * 3) + 1];
+			//		double dZ3 = m_vecVertices[(iVertex3 * 3) + 2];
 
-					bool bFilter = false;
-					if ((dX1 >= dXMin) && (dX1 <= dXMax) &&
-						(dX2 >= dXMin) && (dX2 <= dXMax) &&
-						(dX3 >= dXMin) && (dX3 <= dXMax)) {
-						_vector3f v1(dX1, dY1, dZ1);
-						_vector3f v2(dX2, dY2, dZ2);
-						_vector3f normal = v2.cross(v1);
-						if (normal.getX() > 0) {
-							bFilter = true;
-						}
-					}
+			//		bool bFilter = false;
+			//		if ((dX1 >= dXMin) && (dX1 <= dXMax) &&
+			//			(dX2 >= dXMin) && (dX2 <= dXMax) &&
+			//			(dX3 >= dXMin) && (dX3 <= dXMax)) {
+			//			_vector3f v1(dX1, dY1, dZ1);
+			//			_vector3f v2(dX2, dY2, dZ2);
+			//			_vector3f normal = v2.cross(v1);
+			//			if (normal.getX() > 0) {
+			//				bFilter = true;
+			//			}
+			//		}
 
-					m_mapFaceFilter[iFace + 1] = bFilter;
-				} // for (size_t iFace = ...
-			} // Left
+			//		m_mapFaceFilter[iFace + 1] = bFilter;
+			//	} // for (size_t iFace = ...
+			//} // Left
 
 			// Right
 			{
@@ -130,6 +130,8 @@ namespace _obj2bin
 					double dY1 = m_vecVertices[(iVertex1 * 3) + 1];
 					double dZ1 = m_vecVertices[(iVertex1 * 3) + 2];
 
+					long iNormal1 = atol(vecFaceVertex1[2].c_str()) - 1;
+
 					// Vertex 2
 					vector<string> vecFaceVertex2;
 					_string::split(vecTokens[2], "/", vecFaceVertex2, false);
@@ -139,6 +141,8 @@ namespace _obj2bin
 					double dX2 = m_vecVertices[(iVertex2 * 3) + 0];
 					double dY2 = m_vecVertices[(iVertex2 * 3) + 1];
 					double dZ2 = m_vecVertices[(iVertex2 * 3) + 2];
+
+					long iNormal2 = atol(vecFaceVertex2[2].c_str()) - 1;
 
 					// Vertex 3
 					vector<string> vecFaceVertex3;
@@ -150,14 +154,16 @@ namespace _obj2bin
 					double dY3 = m_vecVertices[(iVertex3 * 3) + 1];
 					double dZ3 = m_vecVertices[(iVertex3 * 3) + 2];
 
+					long iNormal3 = atol(vecFaceVertex3[2].c_str()) - 1;
+
 					bool bFilter = false;
 					if ((dX1 >= dXMin) && (dX1 <= dXMax) &&
 						(dX2 >= dXMin) && (dX2 <= dXMax) &&
 						(dX3 >= dXMin) && (dX3 <= dXMax)) {
-						_vector3f v1(dX1, dY1, dZ1);
-						_vector3f v2(dX2, dY2, dZ2);
-						_vector3f normal = v2.cross(v1);
-						if ((normal.getX() < 0) && !m_mapFaceFilter.at(iFace + 1)) {
+						double dN1x = m_vecNormals[(iNormal1 * 3) + 0];
+						double dN2x = m_vecNormals[(iNormal2 * 3) + 0];
+						double dN3x = m_vecNormals[(iNormal3 * 3) + 0];
+						if ((dN1x < 0) || (dN2x < 0) || (dN3x < 0)) {
 							bFilter = true;
 						}
 					}
