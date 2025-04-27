@@ -78,7 +78,7 @@ namespace _obj2bin
 
 		int64_t iIndex = 0;
 		for (size_t iFace = 0; iFace < m_vecFaces.size(); iFace++) {
-			if (m_pCropping->isFaceFiltered(iFace + 1)) {
+			if (m_pCropping->isFaceFiltered(iFace)) {
 				continue;
 			}
 
