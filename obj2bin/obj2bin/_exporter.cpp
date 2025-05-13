@@ -48,6 +48,8 @@ namespace _obj2bin
 		for (auto& itMaterial : m_mapMaterials) {
 			delete itMaterial.second.first;
 		}
+
+		delete m_pCropping;
 	}
 
 	/*virtual*/ void _exporter::execute()
@@ -62,9 +64,9 @@ namespace _obj2bin
 		// Cropping
 		//
 
-		m_pCropping = new _cropping(m_strInputFile.c_str(), m_strOutputFile.c_str());
-		m_pCropping->setLog(getLog());
-		m_pCropping->execute();
+		//m_pCropping = new _cropping(m_strInputFile.c_str(), m_strOutputFile.c_str());
+		//m_pCropping->setLog(getLog());
+		//m_pCropping->execute();
 
 		//
 		// Materials
@@ -78,9 +80,9 @@ namespace _obj2bin
 
 		int64_t iIndex = 0;
 		for (size_t iFace = 0; iFace < m_vecFaces.size(); iFace++) {
-			if (m_pCropping->isFaceFiltered(iFace)) {
+			/*if (m_pCropping->isFaceFiltered(iFace)) {
 				continue;
-			}
+			}*/
 
 			vector<string> vecTokens;
 			_string::split(m_vecFaces[iFace], " ", vecTokens, false);
@@ -89,7 +91,7 @@ namespace _obj2bin
 			for (size_t iFaceVertex = 1; iFaceVertex < vecTokens.size(); iFaceVertex++) {
 				vector<string> vecFaceVertex;
 				_string::split(vecTokens[iFaceVertex], "/", vecFaceVertex, false);
-				VERIFY_EXPRESSION(vecFaceVertex.size() == 3);			
+				VERIFY_EXPRESSION(vecFaceVertex.size() >= 2);
 
 				m_vecBRepIndices.push_back(iIndex++);
 
@@ -104,10 +106,12 @@ namespace _obj2bin
 					m_vecBRepTextureUVs.push_back(m_vecTextureUVs[(iUVIndex * 2) + 1]);
 				}
 
-				long iNormalIndex = atol(vecFaceVertex[2].c_str()) - 1;
-				m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 0]);
-				m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 1]);
-				m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 2]);
+				if (!m_vecNormals.empty()) {
+					long iNormalIndex = atol(vecFaceVertex[2].c_str()) - 1;
+					m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 0]);
+					m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 1]);
+					m_vecBRepNormals.push_back(m_vecNormals[(iNormalIndex * 3) + 2]);
+				}				
 			}
 
 			m_vecBRepIndices.push_back(-1);
