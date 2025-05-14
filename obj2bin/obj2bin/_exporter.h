@@ -29,9 +29,13 @@ namespace _obj2bin
 
 	protected: // Fields
 
+		// Model
 		OwlModel m_iModel;
 		string m_strInputFile;
 		string m_strOutputFile;
+
+		// Texture
+		bool m_bFlipTextureV;
 
 		// Materials
 		set<string> m_setMaterialLibraries;
@@ -56,7 +60,7 @@ namespace _obj2bin
 
 	public: // Methods
 
-		_exporter(const char* szInputFile, const char* szOutputFile);
+		_exporter(const char* szInputFile, const char* szOutputFile, bool bFlipTextureV = false);
 		virtual ~_exporter();
 
 		virtual void execute();

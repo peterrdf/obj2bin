@@ -29,7 +29,7 @@ extern "C" {
 	{
 		_c_log log(g_pLogCallback);
 
-		_obj2bin::_exporter exporter(szInputFile, szOutputFile);
+		_obj2bin::_exporter exporter(szInputFile, szOutputFile, true/*WASM*/);
 		exporter.setLog(&log);
 		exporter.execute();
 	}

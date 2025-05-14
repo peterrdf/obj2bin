@@ -14,11 +14,12 @@ namespace _obj2bin
 	static const char default_color_name[] = "Default Color";
 
 	// ********************************************************************************************
-	_exporter::_exporter(const char* szInputFile, const char* szOutputFile)
+	_exporter::_exporter(const char* szInputFile, const char* szOutputFile, bool bFlipTextureV/* = false*/)
 		: _log_client()
 		, m_iModel(0)
 		, m_strInputFile()
 		, m_strOutputFile()
+		, m_bFlipTextureV(bFlipTextureV)
 		, m_setMaterialLibraries()
 		, m_vecMaterials()
 		, m_mapMaterials()
@@ -135,13 +136,15 @@ namespace _obj2bin
 			m_vecBRepVertices.data(),
 			m_vecBRepVertices.size());
 
-		SetDatatypeProperty(
-			owlBRepInstance,
-			GetPropertyByName(m_iModel, "normalCoordinates"),
-			m_vecBRepNormals.data(),
-			m_vecBRepNormals.size());
-
 		if (!m_vecBRepNormals.empty()) {
+			SetDatatypeProperty(
+				owlBRepInstance,
+			GetPropertyByName(m_iModel, "normalCoordinates"),
+				m_vecBRepNormals.data(),
+				m_vecBRepNormals.size());
+		}
+		
+		if (!m_vecBRepTextureUVs.empty()) {
 			SetDatatypeProperty(
 				owlBRepInstance,
 				GetPropertyByName(m_iModel, "textureCoordinates"),
@@ -221,7 +224,7 @@ namespace _obj2bin
 			VERIFY_EXPRESSION(vecTokens.size() == 3);
 
 			m_vecTextureUVs.push_back(atof(vecTokens[1].c_str()));
-			m_vecTextureUVs.push_back(-atof(vecTokens[2].c_str()));
+			m_vecTextureUVs.push_back(m_bFlipTextureV ? -atof(vecTokens[2].c_str()) : atof(vecTokens[2].c_str()));
 		} else if (strLine.find("vn ") == 0) {
 			// Normals
 			_string::split(strLine, " ", vecTokens, false);
