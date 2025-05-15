@@ -21,16 +21,15 @@ using namespace std;
 namespace _obj2bin
 {
 	// ********************************************************************************************
-	class _cropping;
-
-	// ********************************************************************************************
 	class _exporter : public _log_client
 	{
 
 	protected: // Fields
 
 		// Model
-		OwlModel m_iModel;
+		OwlModel m_owlModel;
+		bool m_bExternalModel;
+
 		string m_strInputFile;
 		string m_strOutputFile;
 
@@ -49,18 +48,20 @@ namespace _obj2bin
 		vector<double> m_vecTextureUVs;
 		vector<string> m_vecFaces;
 
-		// Cropping
-		_cropping* m_pCropping;
-
 		// BRep
 		vector<int64_t> m_vecBRepIndices;
 		vector<double> m_vecBRepVertices;
 		vector<double> m_vecBRepNormals;
-		vector<double> m_vecBRepTextureUVs;		
+		vector<double> m_vecBRepTextureUVs;
 
 	public: // Methods
 
+		_exporter(const char* szInputFile, bool bFlipTextureV = false);
 		_exporter(const char* szInputFile, const char* szOutputFile, bool bFlipTextureV = false);
+		_exporter(const char* szInputFile, OwlModel owlModel, bool bFlipTextureV = false);
+
+	public: // Methods
+
 		virtual ~_exporter();
 
 		virtual void execute();

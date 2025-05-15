@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "_exporter.h"
 
-#include "_cropping.h"
 #include "_string.h"
 
 #include <atlstr.h>
@@ -14,12 +13,13 @@ namespace _obj2bin
 	static const char default_color_name[] = "Default Color";
 
 	// ********************************************************************************************
-	_exporter::_exporter(const char* szInputFile, const char* szOutputFile, bool bFlipTextureV/* = false*/)
+	_exporter::_exporter(const char* szInputFile, bool bFlipTextureV/* = false*/)
 		: _log_client()
-		, m_iModel(0)
-		, m_strInputFile()
-		, m_strOutputFile()
-		, m_bFlipTextureV(bFlipTextureV)
+		, m_owlModel(0)
+		, m_bExternalModel(false)
+		, m_strInputFile("")
+		, m_strOutputFile("")
+		, m_bFlipTextureV(false)
 		, m_setMaterialLibraries()
 		, m_vecMaterials()
 		, m_mapMaterials()
@@ -34,23 +34,36 @@ namespace _obj2bin
 		, m_vecBRepTextureUVs()
 	{
 		VERIFY_POINTER(szInputFile);
-		VERIFY_POINTER(szOutputFile);
 
 		m_strInputFile = szInputFile;
+	}
+
+	_exporter::_exporter(const char* szInputFile, const char* szOutputFile, bool bFlipTextureV/* = false*/)
+		: _exporter(szInputFile, bFlipTextureV)
+	{
+		VERIFY_POINTER(szOutputFile);
+
 		m_strOutputFile = szOutputFile;
+	}
+
+	_exporter::_exporter(const char* szInputFile, OwlModel owlModel, bool bFlipTextureV/* = false*/)
+		: _exporter(szInputFile, bFlipTextureV)
+	{
+		VERIFY_INSTANCE(owlModel);
+
+		m_owlModel = owlModel;
+		m_bExternalModel = true;
 	}
 
 	/*virtual*/ _exporter::~_exporter()
 	{
-		if (m_iModel != 0) {
-			CloseModel(m_iModel);
-		}
+		if (!m_bExternalModel && (m_owlModel != 0)) {
+			CloseModel(m_owlModel);
+		}		
 
 		for (auto& itMaterial : m_mapMaterials) {
 			delete itMaterial.second.first;
 		}
-
-		delete m_pCropping;
 	}
 
 	/*virtual*/ void _exporter::execute()
@@ -60,14 +73,6 @@ namespace _obj2bin
 		//
 
 		load();
-
-		//
-		// Cropping
-		//
-
-		//m_pCropping = new _cropping(m_strInputFile.c_str(), m_strOutputFile.c_str());
-		//m_pCropping->setLog(getLog());
-		//m_pCropping->execute();
 
 		//
 		// Materials
@@ -81,10 +86,6 @@ namespace _obj2bin
 
 		int64_t iIndex = 0;
 		for (size_t iFace = 0; iFace < m_vecFaces.size(); iFace++) {
-			/*if (m_pCropping->isFaceFiltered(iFace)) {
-				continue;
-			}*/
-
 			vector<string> vecTokens;
 			_string::split(m_vecFaces[iFace], " ", vecTokens, false);
 			VERIFY_EXPRESSION(vecTokens.size() == 4);
@@ -118,28 +119,30 @@ namespace _obj2bin
 			m_vecBRepIndices.push_back(-1);
 		} // for (size_t iFace = ...
 
-		m_iModel = CreateModel();
-		assert(m_iModel != 0);
+		if (m_owlModel == 0) {
+			m_owlModel = CreateModel();
+			assert(m_owlModel != 0);
+		}		
 
-		OwlInstance owlBRepInstance = CreateInstance(GetClassByName(m_iModel, "BoundaryRepresentation"));
+		OwlInstance owlBRepInstance = CreateInstance(GetClassByName(m_owlModel, "BoundaryRepresentation"));
 		VERIFY_INSTANCE(owlBRepInstance);
 
 		SetDatatypeProperty(
 			owlBRepInstance,
-			GetPropertyByName(m_iModel, "indices"),
+			GetPropertyByName(m_owlModel, "indices"),
 			m_vecBRepIndices.data(),
 			m_vecBRepIndices.size());
 
 		SetDatatypeProperty(
 			owlBRepInstance,
-			GetPropertyByName(m_iModel, "vertices"),
+			GetPropertyByName(m_owlModel, "vertices"),
 			m_vecBRepVertices.data(),
 			m_vecBRepVertices.size());
 
 		if (!m_vecBRepNormals.empty()) {
 			SetDatatypeProperty(
 				owlBRepInstance,
-			GetPropertyByName(m_iModel, "normalCoordinates"),
+			GetPropertyByName(m_owlModel, "normalCoordinates"),
 				m_vecBRepNormals.data(),
 				m_vecBRepNormals.size());
 		}
@@ -147,18 +150,18 @@ namespace _obj2bin
 		if (!m_vecBRepTextureUVs.empty()) {
 			SetDatatypeProperty(
 				owlBRepInstance,
-				GetPropertyByName(m_iModel, "textureCoordinates"),
+				GetPropertyByName(m_owlModel, "textureCoordinates"),
 				m_vecBRepTextureUVs.data(),
 				m_vecBRepTextureUVs.size());
 		}		
 
 		SetObjectProperty(
 			owlBRepInstance, 
-			GetPropertyByName(m_iModel, 
+			GetPropertyByName(m_owlModel, 
 				"material"), 
 			getMaterialInstance());
 
-		SaveModel(m_iModel, m_strOutputFile.c_str());
+		SaveModel(m_owlModel, m_strOutputFile.c_str());
 	}
 
 	void _exporter::load()
@@ -343,15 +346,15 @@ namespace _obj2bin
 
 	void _exporter::createDefaultMaterial()
 	{
-		m_iDefaultMaterialInstance = CreateInstance(GetClassByName(m_iModel, "Material"));
+		m_iDefaultMaterialInstance = CreateInstance(GetClassByName(m_owlModel, "Material"));
 		VERIFY_INSTANCE(m_iDefaultMaterialInstance);
 
-		OwlInstance owlColorInstance = CreateInstance(GetClassByName(m_iModel, "Color"));
+		OwlInstance owlColorInstance = CreateInstance(GetClassByName(m_owlModel, "Color"));
 		VERIFY_INSTANCE(owlColorInstance);
 
 		SetObjectProperty(
 			m_iDefaultMaterialInstance,
-			GetPropertyByName(m_iModel, "color"),
+			GetPropertyByName(m_owlModel, "color"),
 			&owlColorInstance,
 			1);
 
@@ -360,38 +363,38 @@ namespace _obj2bin
 
 		SetObjectProperty(
 			owlColorInstance,
-			GetPropertyByName(m_iModel, "ambient"),
+			GetPropertyByName(m_owlModel, "ambient"),
 			&owlColorComponentInstance,
 			1);
 
 		double dTransparency = 0.25;
 		SetDatatypeProperty(
 			owlColorInstance,
-			GetPropertyByName(m_iModel, "transparency"),
+			GetPropertyByName(m_owlModel, "transparency"),
 			&dTransparency,
 			1);
 	}
 
 	OwlInstance _exporter::createColorComponentInstance(const string& strName, double dR, double dG, double dB)
 	{
-		OwlInstance owlColorComponentInstance = CreateInstance(GetClassByName(m_iModel, "ColorComponent"));
+		OwlInstance owlColorComponentInstance = CreateInstance(GetClassByName(m_owlModel, "ColorComponent"));
 		VERIFY_INSTANCE(owlColorComponentInstance);
 
 		SetDatatypeProperty(
 			owlColorComponentInstance,
-			GetPropertyByName(m_iModel, "R"),
+			GetPropertyByName(m_owlModel, "R"),
 			&dR,
 			1);
 
 		SetDatatypeProperty(
 			owlColorComponentInstance,
-			GetPropertyByName(m_iModel, "G"),
+			GetPropertyByName(m_owlModel, "G"),
 			&dG,
 			1);
 
 		SetDatatypeProperty(
 			owlColorComponentInstance,
-			GetPropertyByName(m_iModel, "B"),
+			GetPropertyByName(m_owlModel, "B"),
 			&dB,
 			1);
 
@@ -439,11 +442,11 @@ namespace _obj2bin
 			szTexture[0] = new char[strlen(strTexture.c_str()) + 1];
 			strcpy(szTexture[0], strTexture.c_str());
 
-			OwlInstance owlTextureInstance = CreateInstance(GetClassByName(m_iModel, "Texture"));
-			SetDatatypeProperty(owlTextureInstance, GetPropertyByName(m_iModel, "name"), (void**)szTexture, 1);
+			OwlInstance owlTextureInstance = CreateInstance(GetClassByName(m_owlModel, "Texture"));
+			SetDatatypeProperty(owlTextureInstance, GetPropertyByName(m_owlModel, "name"), (void**)szTexture, 1);
 
-			itMaterial->second.second = CreateInstance(GetClassByName(m_iModel, "Material"));
-			SetObjectProperty(itMaterial->second.second, GetPropertyByName(m_iModel, "textures"), owlTextureInstance);
+			itMaterial->second.second = CreateInstance(GetClassByName(m_owlModel, "Material"));
+			SetObjectProperty(itMaterial->second.second, GetPropertyByName(m_owlModel, "textures"), owlTextureInstance);
 		}
 
 		return itMaterial->second.second;
