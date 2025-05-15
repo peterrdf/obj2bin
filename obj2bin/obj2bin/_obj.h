@@ -75,7 +75,7 @@ namespace _obj2bin
 		void processOBJLine(const string& strLine);
 
 		void loadMaterials();		
-		OwlInstance createColorComponentInstance(const string& strName, double dR, double dG, double dB);
+		OwlInstance createColorComponentInstance(double dR, double dG, double dB);
 		void createDefaultMaterial();
 		OwlInstance getDefaultMaterialInstance();
 		OwlInstance getMaterialInstance();

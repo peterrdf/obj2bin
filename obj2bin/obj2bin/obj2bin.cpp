@@ -2,8 +2,7 @@
 #include "obj2bin.h"
 
 #include "_log.h"
-#include "_exporter.h"
-#include "_cropping.h"
+#include "_obj.h"
 
 #ifdef _WINDOWS
 #include <experimental/filesystem>

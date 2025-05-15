@@ -165,7 +165,7 @@
     <ClInclude Include="obj2bin.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="_cropping.h" />
-    <ClInclude Include="_exporter.h" />
+    <ClInclude Include="_obj.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\include\_reader.cpp" />
@@ -178,7 +178,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="_cropping.cpp" />
-    <ClCompile Include="_exporter.cpp" />
+    <ClCompile Include="_obj.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

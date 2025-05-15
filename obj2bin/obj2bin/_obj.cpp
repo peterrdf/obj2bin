@@ -1,6 +1,7 @@
 #include "pch.h"
-#include "_exporter.h"
+#include "_obj.h"
 
+#include "_errors.h"
 #include "_string.h"
 
 #include <atlstr.h>
@@ -19,7 +20,7 @@ namespace _obj2bin
 		, m_bExternalModel(false)
 		, m_strInputFile("")
 		, m_strOutputFile("")
-		, m_bFlipTextureV(false)
+		, m_bFlipTextureV(bFlipTextureV)
 		, m_setMaterialLibraries()
 		, m_vecMaterials()
 		, m_mapMaterials()
@@ -358,7 +359,7 @@ namespace _obj2bin
 			&owlColorInstance,
 			1);
 
-		OwlInstance owlColorComponentInstance = createColorComponentInstance(default_color_name, 0., 0., 1.);
+		OwlInstance owlColorComponentInstance = createColorComponentInstance(0., 0., 1.);
 		VERIFY_INSTANCE(owlColorComponentInstance);
 
 		SetObjectProperty(
@@ -375,7 +376,7 @@ namespace _obj2bin
 			1);
 	}
 
-	OwlInstance _exporter::createColorComponentInstance(const string& strName, double dR, double dG, double dB)
+	OwlInstance _exporter::createColorComponentInstance(double dR, double dG, double dB)
 	{
 		OwlInstance owlColorComponentInstance = CreateInstance(GetClassByName(m_owlModel, "ColorComponent"));
 		VERIFY_INSTANCE(owlColorComponentInstance);
