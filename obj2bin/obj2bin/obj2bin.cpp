@@ -28,7 +28,7 @@ extern "C" {
 	{
 		_c_log log(g_pLogCallback);
 
-		_obj2bin::_exporter exporter(szInputFile, szOutputFile, true/*WASM*/);
+		_obj2bin::_exporter exporter(szInputFile, szOutputFile, false/*XRCulture WASM & 3DEditor*/);
 		exporter.setLog(&log);
 		exporter.execute();
 	}
