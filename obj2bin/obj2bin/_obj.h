@@ -49,6 +49,7 @@ namespace _obj2bin
 		vector<double> m_vecVertices;
 		vector<double> m_vecNormals;
 		vector<double> m_vecTextureUVs;
+		vector<string> m_vecFaces;
 
 		// BRep (Temp)
 		vector<int64_t> m_vecBRepIndices;
@@ -78,7 +79,7 @@ namespace _obj2bin
 
 		void processOBJLine(const string& strLine);
 
-		void loadMaterials();		
+		void loadMaterials();
 		OwlInstance createColorComponentInstance(double dR, double dG, double dB);
 		void createDefaultMaterial();
 		OwlInstance getDefaultMaterialInstance();
@@ -96,7 +97,8 @@ namespace _obj2bin
 	public: // Methods
 		_brep()
 			: m_vecFaces()
-		{}
+		{
+		}
 
 		vector<string>& faces() { return m_vecFaces; }
 	};

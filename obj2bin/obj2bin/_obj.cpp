@@ -28,6 +28,7 @@ namespace _obj2bin
 		, m_vecVertices()
 		, m_vecNormals()
 		, m_vecTextureUVs()
+		, m_vecFaces()
 		, m_vecBRepIndices()
 		, m_vecBRepVertices()
 		, m_vecBRepNormals()
@@ -60,7 +61,7 @@ namespace _obj2bin
 	{
 		if (!m_bExternalModel && (m_owlModel != 0)) {
 			CloseModel(m_owlModel);
-		}		
+		}
 
 		for (auto& itMaterial : m_mapMaterials) {
 			delete itMaterial.second.first;
@@ -224,6 +225,10 @@ namespace _obj2bin
 
 	void _exporter::processOBJLine(const string& strLine)
 	{
+		if (strLine.empty()) {
+			return;
+		}
+
 		vector<string> vecTokens;
 
 		if (strLine.find("#") == 0) {
@@ -245,7 +250,7 @@ namespace _obj2bin
 		} else if (strLine.find("v ") == 0) {
 			// Vertex
 			_string::split(strLine, " ", vecTokens, false);
-			VERIFY_EXPRESSION(vecTokens.size() == 4);
+			VERIFY_EXPRESSION(vecTokens.size() >= 4); // MeshLab 
 
 			m_vecVertices.push_back(atof(vecTokens[1].c_str()));
 			m_vecVertices.push_back(atof(vecTokens[2].c_str()));
@@ -278,7 +283,7 @@ namespace _obj2bin
 			// Faces
 			m_vecBReps.back()->faces().push_back(strLine);
 		} else {
-			string strWarning = "Not support element: '"; 
+			string strWarning = "Not support element: '";
 			strWarning += strLine.substr(0, 10);
 			strWarning += "...'";
 			getLog()->logWrite(enumLogEvent::warning, strWarning);
@@ -310,7 +315,7 @@ namespace _obj2bin
 			}
 
 			vector<string> vecTokens;
-			string strMaterial;			
+			string strMaterial;
 
 			string strLine;
 			while (ch != EOF) {
@@ -355,19 +360,21 @@ namespace _obj2bin
 
 						_string::split(strLine, " ", vecTokens, false);
 						VERIFY_EXPRESSION(vecTokens.size() == 2);
-						
+
 						auto pMaterial = new _material(0, 0, 0, 0, 1.f, (LPCWSTR)CA2W(vecTokens[1].c_str())); //#todo: materials without texture
 						VERIFY_EXPRESSION(m_mapMaterials.find(strMaterial) == m_mapMaterials.end());
 						m_mapMaterials[strMaterial] = { pMaterial, 0 };
 
 						strMaterial = "";
 					} else {
-						string strWarning = "Not support element: '";
-						strWarning += strLine.substr(0, 10);
-						strWarning += "...'";
-						getLog()->logWrite(enumLogEvent::warning, strWarning);
+						if (!strLine.empty()) {
+							string strWarning = "Not support element: '";
+							strWarning += strLine.substr(0, 10);
+							strWarning += "...'";
+							getLog()->logWrite(enumLogEvent::warning, strWarning);
+						}
 					}
-					
+
 					strLine = "";
 
 					ch = pReader->getNextChar(false);
