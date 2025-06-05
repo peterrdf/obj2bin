@@ -49,7 +49,6 @@ namespace _obj2bin
 		vector<double> m_vecVertices;
 		vector<double> m_vecNormals;
 		vector<double> m_vecTextureUVs;
-		vector<string> m_vecFaces;
 
 		// BRep (Temp)
 		vector<int64_t> m_vecBRepIndices;

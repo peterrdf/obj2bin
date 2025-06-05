@@ -164,7 +164,6 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="obj2bin.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="_cropping.h" />
     <ClInclude Include="_obj.h" />
   </ItemGroup>
   <ItemGroup>
@@ -177,7 +176,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="_cropping.cpp" />
     <ClCompile Include="_obj.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

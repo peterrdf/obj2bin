@@ -28,7 +28,6 @@ namespace _obj2bin
 		, m_vecVertices()
 		, m_vecNormals()
 		, m_vecTextureUVs()
-		, m_vecFaces()
 		, m_vecBRepIndices()
 		, m_vecBRepVertices()
 		, m_vecBRepNormals()
