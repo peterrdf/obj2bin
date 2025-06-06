@@ -263,13 +263,14 @@ namespace _obj2bin
 			m_vecTextureUVs.push_back(atof(vecTokens[1].c_str()));
 			m_vecTextureUVs.push_back(m_bFlipTextureV ? -atof(vecTokens[2].c_str()) : atof(vecTokens[2].c_str()));
 		} else if (strLine.find("vn ") == 0) {
-			// Normals
-			_string::split(strLine, " ", vecTokens, false);
+			// PATCH for MeshLab; requires BRep optimization
+			// Normals 
+			/*_string::split(strLine, " ", vecTokens, false);
 			VERIFY_EXPRESSION(vecTokens.size() == 4);
 
 			m_vecNormals.push_back(atof(vecTokens[1].c_str()));
 			m_vecNormals.push_back(atof(vecTokens[2].c_str()));
-			m_vecNormals.push_back(atof(vecTokens[3].c_str()));
+			m_vecNormals.push_back(atof(vecTokens[3].c_str()));*/
 		} else if (strLine.find("f ") == 0) {
 			if (m_vecMaterials.empty()) {
 				m_vecMaterials.push_back("---default---");
