@@ -2,7 +2,7 @@
 #include "obj2bin.h"
 
 #include "_log.h"
-#include "_obj.h"
+#include "_obj2bin.h"
 
 #ifdef _WINDOWS
 #include <experimental/filesystem>

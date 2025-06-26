@@ -57,7 +57,7 @@
     <ClInclude Include="..\..\include\_3DUtils.h">
       <Filter>Include</Filter>
     </ClInclude>
-    <ClInclude Include="_obj.h">
+    <ClInclude Include="_obj2bin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -74,7 +74,7 @@
     <ClCompile Include="..\..\include\_reader.cpp">
       <Filter>Include</Filter>
     </ClCompile>
-    <ClCompile Include="_obj.cpp">
+    <ClCompile Include="_obj2bin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
