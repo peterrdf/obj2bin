@@ -78,7 +78,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>./;../../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../../include;../parsers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -98,7 +98,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>./;../../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../../include;../parsers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -118,7 +118,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>./;../../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../../include;../parsers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -138,7 +138,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>./;../../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../../include;../parsers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -153,21 +153,49 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\engdef.h" />
     <ClInclude Include="..\..\include\engine.h" />
-    <ClInclude Include="..\..\include\_3DUtils.h" />
-    <ClInclude Include="..\..\include\_errors.h" />
-    <ClInclude Include="..\..\include\_io.h" />
-    <ClInclude Include="..\..\include\_log.h" />
-    <ClInclude Include="..\..\include\_material.h" />
-    <ClInclude Include="..\..\include\_reader.h" />
-    <ClInclude Include="..\..\include\_string.h" />
-    <ClInclude Include="..\..\include\_time.h" />
+    <ClInclude Include="..\parsers\_3DUtils.h" />
+    <ClInclude Include="..\parsers\_errors.h" />
+    <ClInclude Include="..\parsers\_host.h" />
+    <ClInclude Include="..\parsers\_importer_t.h" />
+    <ClInclude Include="..\parsers\_io.h" />
+    <ClInclude Include="..\parsers\_json.h" />
+    <ClInclude Include="..\parsers\_log.h" />
+    <ClInclude Include="..\parsers\_material.h" />
+    <ClInclude Include="..\parsers\_reader.h" />
+    <ClInclude Include="..\parsers\_schema_storage.h" />
+    <ClInclude Include="..\parsers\_serialization.h" />
+    <ClInclude Include="..\parsers\_string.h" />
+    <ClInclude Include="..\parsers\_time.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="obj2bin.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="_obj2bin.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\include\_reader.cpp" />
+    <ClCompile Include="..\parsers\_importer_t.cpp">
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_host.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="..\parsers\_json.cpp">
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_host.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="..\parsers\_reader.cpp">
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_host.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="..\parsers\_serialization.cpp">
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_host.h</PrecompiledHeaderFile>
+    </ClCompile>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="obj2bin.cpp" />
     <ClCompile Include="pch.cpp">
@@ -176,7 +204,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="_obj2bin.cpp" />
+    <ClCompile Include="_obj2bin.cpp">
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_host.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_host.h</PrecompiledHeaderFile>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

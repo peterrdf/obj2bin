@@ -16,6 +16,9 @@
     <Filter Include="Include">
       <UniqueIdentifier>{a2928bbd-53f0-40dc-a478-795cae2deaf3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="parsers">
+      <UniqueIdentifier>{70264515-5ff4-430e-aadb-b57708008538}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -27,38 +30,53 @@
     <ClInclude Include="obj2bin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\_errors.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\_io.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\_log.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\_reader.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\_string.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\_time.h">
-      <Filter>Include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\engdef.h">
       <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\engine.h">
       <Filter>Include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\_material.h">
-      <Filter>Include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\_3DUtils.h">
-      <Filter>Include</Filter>
-    </ClInclude>
     <ClInclude Include="_obj2bin.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_3DUtils.h">
+      <Filter>parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_errors.h">
+      <Filter>parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_io.h">
+      <Filter>parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_log.h">
+      <Filter>parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_material.h">
+      <Filter>parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_reader.h">
+      <Filter>parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_string.h">
+      <Filter>parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_time.h">
+      <Filter>parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_host.h">
+      <Filter>parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_importer_t.h">
+      <Filter>parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_json.h">
+      <Filter>parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_schema_storage.h">
+      <Filter>parsers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsers\_serialization.h">
+      <Filter>parsers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -71,11 +89,20 @@
     <ClCompile Include="obj2bin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\include\_reader.cpp">
-      <Filter>Include</Filter>
-    </ClCompile>
     <ClCompile Include="_obj2bin.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parsers\_reader.cpp">
+      <Filter>parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parsers\_importer_t.cpp">
+      <Filter>parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parsers\_json.cpp">
+      <Filter>parsers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parsers\_serialization.cpp">
+      <Filter>parsers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

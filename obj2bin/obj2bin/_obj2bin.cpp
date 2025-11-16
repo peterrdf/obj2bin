@@ -1,10 +1,8 @@
-#include "pch.h"
+#include "_host.h"
 #include "_obj2bin.h"
 
-#include "_errors.h"
-#include "_string.h"
-
-#include <atlstr.h>
+#include "../parsers/_errors.h"
+#include "../parsers/_string.h"
 
 // ************************************************************************************************
 namespace _obj2bin
@@ -14,13 +12,14 @@ namespace _obj2bin
 	static const char default_color_name[] = "Default Color";
 
 	// ********************************************************************************************
-	_exporter::_exporter(const char* szInputFile, bool bFlipTextureV/* = false*/)
+	_exporter::_exporter(const char* szInputFile, bool bTextureFlipV/* = false*/)
 		: _log_client()
 		, m_owlModel(0)
 		, m_bExternalModel(false)
 		, m_strInputFile("")
 		, m_strOutputFile("")
-		, m_bFlipTextureV(bFlipTextureV)
+		, m_bTextureFlipV(bTextureFlipV)
+		, m_rdfTextureFlipYProperty(0)
 		, m_setMaterialLibraries()
 		, m_vecMaterials()
 		, m_mapMaterials()
@@ -40,16 +39,16 @@ namespace _obj2bin
 		m_strInputFile = szInputFile;
 	}
 
-	_exporter::_exporter(const char* szInputFile, const char* szOutputFile, bool bFlipTextureV/* = false*/)
-		: _exporter(szInputFile, bFlipTextureV)
+	_exporter::_exporter(const char* szInputFile, const char* szOutputFile, bool bTextureFlipV/* = false*/)
+		: _exporter(szInputFile, bTextureFlipV)
 	{
 		VERIFY_POINTER(szOutputFile);
 
 		m_strOutputFile = szOutputFile;
 	}
 
-	_exporter::_exporter(const char* szInputFile, OwlModel owlModel, bool bFlipTextureV/* = false*/)
-		: _exporter(szInputFile, bFlipTextureV)
+	_exporter::_exporter(const char* szInputFile, OwlModel owlModel, bool bTextureFlipV/* = false*/)
+		: _exporter(szInputFile, bTextureFlipV)
 	{
 		VERIFY_INSTANCE(owlModel);
 
@@ -61,7 +60,7 @@ namespace _obj2bin
 	{
 		if (!m_bExternalModel && (m_owlModel != 0)) {
 			CloseModel(m_owlModel);
-		}
+		}		
 
 		for (auto& itMaterial : m_mapMaterials) {
 			delete itMaterial.second.first;
@@ -261,16 +260,15 @@ namespace _obj2bin
 			VERIFY_EXPRESSION(vecTokens.size() == 3);
 
 			m_vecTextureUVs.push_back(atof(vecTokens[1].c_str()));
-			m_vecTextureUVs.push_back(m_bFlipTextureV ? -atof(vecTokens[2].c_str()) : atof(vecTokens[2].c_str()));
+			m_vecTextureUVs.push_back(m_bTextureFlipV ? -atof(vecTokens[2].c_str()) : atof(vecTokens[2].c_str()));
 		} else if (strLine.find("vn ") == 0) {
-			// PATCH for MeshLab; requires BRep optimization
-			// Normals 
-			/*_string::split(strLine, " ", vecTokens, false);
+			// Normals
+			_string::split(strLine, " ", vecTokens, false);
 			VERIFY_EXPRESSION(vecTokens.size() == 4);
 
 			m_vecNormals.push_back(atof(vecTokens[1].c_str()));
 			m_vecNormals.push_back(atof(vecTokens[2].c_str()));
-			m_vecNormals.push_back(atof(vecTokens[3].c_str()));*/
+			m_vecNormals.push_back(atof(vecTokens[3].c_str()));
 		} else if (strLine.find("f ") == 0) {
 			if (m_vecMaterials.empty()) {
 				m_vecMaterials.push_back("---default---");
@@ -284,7 +282,7 @@ namespace _obj2bin
 			// Faces
 			m_vecBReps.back()->faces().push_back(strLine);
 		} else {
-			string strWarning = "Not support element: '";
+			string strWarning = "Not support element: '"; 
 			strWarning += strLine.substr(0, 10);
 			strWarning += "...'";
 			getLog()->logWrite(enumLogEvent::warning, strWarning);
@@ -316,7 +314,7 @@ namespace _obj2bin
 			}
 
 			vector<string> vecTokens;
-			string strMaterial;
+			string strMaterial;			
 
 			string strLine;
 			while (ch != EOF) {
@@ -361,8 +359,8 @@ namespace _obj2bin
 
 						_string::split(strLine, " ", vecTokens, false);
 						VERIFY_EXPRESSION(vecTokens.size() == 2);
-
-						auto pMaterial = new _material(0, 0, 0, 0, 1.f, (LPCWSTR)CA2W(vecTokens[1].c_str())); //#todo: materials without texture
+						
+						auto pMaterial = new _material(0, 0, 0, 0, 1.f, (LPCWSTR)CA2W(vecTokens[1].c_str()), false); //#todo: materials without texture
 						VERIFY_EXPRESSION(m_mapMaterials.find(strMaterial) == m_mapMaterials.end());
 						m_mapMaterials[strMaterial] = { pMaterial, 0 };
 
@@ -375,7 +373,7 @@ namespace _obj2bin
 							getLog()->logWrite(enumLogEvent::warning, strWarning);
 						}
 					}
-
+					
 					strLine = "";
 
 					ch = pReader->getNextChar(false);
@@ -482,6 +480,20 @@ namespace _obj2bin
 		}
 
 		if (itMaterial->second.second == 0) {
+			if (m_rdfTextureFlipYProperty == 0) {
+				m_rdfTextureFlipYProperty = CreateProperty(
+					m_owlModel,
+					DATATYPEPROPERTY_TYPE_BOOLEAN,
+					"flipY");
+				VERIFY_INSTANCE(m_rdfTextureFlipYProperty);
+
+				SetClassPropertyCardinalityRestriction(
+					GetClassByName(m_owlModel, "Texture"),
+					m_rdfTextureFlipYProperty,
+					1,
+					1);
+			}
+
 			string strTexture = (LPCSTR)CW2A(itMaterial->second.first->texture().c_str());
 
 			char** szTexture = new char* [1];
@@ -490,6 +502,9 @@ namespace _obj2bin
 
 			OwlInstance owlTextureInstance = CreateInstance(GetClassByName(m_owlModel, "Texture"));
 			SetDatatypeProperty(owlTextureInstance, GetPropertyByName(m_owlModel, "name"), (void**)szTexture, 1);
+
+			bool bFlipY = true;
+			SetDatatypeProperty(owlTextureInstance, m_rdfTextureFlipYProperty, (void**)bFlipY);
 
 			itMaterial->second.second = CreateInstance(GetClassByName(m_owlModel, "Material"));
 			SetObjectProperty(itMaterial->second.second, GetPropertyByName(m_owlModel, "textures"), owlTextureInstance);

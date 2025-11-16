@@ -3,14 +3,18 @@
 #ifdef _WINDOWS
 #include "engine.h"
 #else
-#include "../../include/engine.h"
+#include "../include/engine.h"
 #endif
 
-#include "_log.h"
-#include "_io.h"
-#include "_errors.h"
-#include "_reader.h"
+#include "../parsers/_log.h"
+#include "../parsers/_io.h"
+#include "../parsers/_errors.h"
+#include "../parsers/_reader.h"
+#ifdef _WINDOWS
 #include "_material.h"
+#else
+#include "../openglsdk/_material.h"
+#endif
 
 #include <set>
 #include <map>
@@ -37,7 +41,8 @@ namespace _obj2bin
 		string m_strOutputFile;
 
 		// Texture
-		bool m_bFlipTextureV;
+		bool m_bTextureFlipV;
+		RdfProperty m_rdfTextureFlipYProperty;
 
 		// Materials
 		set<string> m_setMaterialLibraries;
@@ -61,12 +66,9 @@ namespace _obj2bin
 
 	public: // Methods
 
-		_exporter(const char* szInputFile, bool bFlipTextureV = false);
-		_exporter(const char* szInputFile, const char* szOutputFile, bool bFlipTextureV = false);
-		_exporter(const char* szInputFile, OwlModel owlModel, bool bFlipTextureV = false);
-
-	public: // Methods
-
+		_exporter(const char* szInputFile, bool bTextureFlipV = false);
+		_exporter(const char* szInputFile, const char* szOutputFile, bool bTextureFlipV = false);
+		_exporter(const char* szInputFile, OwlModel owlModel, bool bTextureFlipV = false);
 		virtual ~_exporter();
 
 		virtual void execute();
@@ -79,7 +81,7 @@ namespace _obj2bin
 
 		void processOBJLine(const string& strLine);
 
-		void loadMaterials();
+		void loadMaterials();		
 		OwlInstance createColorComponentInstance(double dR, double dG, double dB);
 		void createDefaultMaterial();
 		OwlInstance getDefaultMaterialInstance();
@@ -97,8 +99,7 @@ namespace _obj2bin
 	public: // Methods
 		_brep()
 			: m_vecFaces()
-		{
-		}
+		{}
 
 		vector<string>& faces() { return m_vecFaces; }
 	};
