@@ -1,15 +1,53 @@
 #include "_host.h"
 #include "_obj2bin.h"
 
-#include "../parsers/_errors.h"
-#include "../parsers/_string.h"
+#include "_errors.h"
+#include "_string.h"
 
 // ************************************************************************************************
 namespace _obj2bin
 {
-	// ********************************************************************************************
+	// ************************************************************************************************
+#define PI 3.14159265
+
+// ********************************************************************************************
 	static const char default_material_name[] = "Default Material";
 	static const char default_color_name[] = "Default Color";
+
+	// ********************************************************************************************
+	static void	matrixRotateByEulerAngles(
+		_matrix* matrix,
+		double	alpha,
+		double	beta,
+		double	gamma)
+	{
+		//
+		//	https://en.wikipedia.org/wiki/Rotation_matrix
+		//
+		double	cos_alpha = cos(alpha), sin_alpha = sin(alpha),
+			cos_beta = cos(beta), sin_beta = sin(beta),
+			cos_gamma = cos(gamma), sin_gamma = sin(gamma);
+
+		matrix->_11 = 1. * cos_beta * cos_gamma;
+		matrix->_12 = 1. * cos_beta * sin_gamma;
+		matrix->_13 = -1. * sin_beta * 1.;
+
+		matrix->_21 = sin_alpha * sin_beta * cos_gamma
+			- cos_alpha * 1. * sin_gamma;
+		matrix->_22 = sin_alpha * sin_beta * sin_gamma
+			+ cos_alpha * 1. * cos_gamma;
+		matrix->_23 = sin_alpha * cos_beta * 1.;
+
+		matrix->_31 = cos_alpha * sin_beta * cos_gamma
+			+ sin_alpha * 1. * sin_gamma;
+		matrix->_32 = cos_alpha * sin_beta * sin_gamma
+			- sin_alpha * 1. * cos_gamma;
+		matrix->_33 = cos_alpha * cos_beta * 1.;
+
+		matrix->_41 = 0.;
+		matrix->_42 = 0.;
+		matrix->_43 = 0.;
+	}
 
 	// ********************************************************************************************
 	_exporter::_exporter(const char* szInputFile, bool bTextureFlipV/* = false*/)
@@ -60,7 +98,7 @@ namespace _obj2bin
 	{
 		if (!m_bExternalModel && (m_owlModel != 0)) {
 			CloseModel(m_owlModel);
-		}		
+		}
 
 		for (auto& itMaterial : m_mapMaterials) {
 			delete itMaterial.second.first;
@@ -102,6 +140,7 @@ namespace _obj2bin
 			assert(m_owlModel != 0);
 		}
 
+		vector<OwlInstance> vecBRepInstances;
 		for (size_t iBRep = 0; iBRep < m_vecBReps.size(); iBRep++) {
 			auto pBRep = m_vecBReps[iBRep];
 			VERIFY_POINTER(pBRep);
@@ -187,7 +226,57 @@ namespace _obj2bin
 				GetPropertyByName(m_owlModel,
 					"material"),
 				getMaterialInstance(iBRep));
+
+			vecBRepInstances.push_back(owlBRepInstance);
 		} // for (size_t iBRep = ...
+
+		OwlInstance owlCollectionInstance = CreateInstance(
+			GetClassByName(m_owlModel,
+				"Collection"));
+		assert(owlCollectionInstance != 0);
+
+		SetObjectProperty(
+			owlCollectionInstance,
+			GetPropertyByName(m_owlModel, "objects"),
+			vecBRepInstances.data(),
+			vecBRepInstances.size());
+
+		OwlInstance owlMatrixInstance = CreateInstance(
+			GetClassByName(m_owlModel,
+				"Matrix"));
+		VERIFY_INSTANCE(owlMatrixInstance != 0);
+
+		_matrix matrix;
+		memset(&matrix, 0, sizeof(_matrix));
+		matrixRotateByEulerAngles(&matrix, 2 * PI * -90. / 360., 0., 0.);
+
+		SetDatatypeProperty(owlMatrixInstance, GetPropertyByName(m_owlModel, "_11"), &matrix._11, 1);
+		SetDatatypeProperty(owlMatrixInstance, GetPropertyByName(m_owlModel, "_12"), &matrix._12, 1);
+		SetDatatypeProperty(owlMatrixInstance, GetPropertyByName(m_owlModel, "_13"), &matrix._13, 1);
+
+		SetDatatypeProperty(owlMatrixInstance, GetPropertyByName(m_owlModel, "_21"), &matrix._21, 1);
+		SetDatatypeProperty(owlMatrixInstance, GetPropertyByName(m_owlModel, "_22"), &matrix._22, 1);
+		SetDatatypeProperty(owlMatrixInstance, GetPropertyByName(m_owlModel, "_23"), &matrix._23, 1);
+
+		SetDatatypeProperty(owlMatrixInstance, GetPropertyByName(m_owlModel, "_31"), &matrix._31, 1);
+		SetDatatypeProperty(owlMatrixInstance, GetPropertyByName(m_owlModel, "_32"), &matrix._32, 1);
+		SetDatatypeProperty(owlMatrixInstance, GetPropertyByName(m_owlModel, "_33"), &matrix._33, 1);
+
+		OwlInstance owlTransformationInstance = CreateInstance(
+			GetClassByName(m_owlModel,
+				"Transformation"));
+		VERIFY_INSTANCE(owlTransformationInstance != 0);
+
+		SetObjectProperty(
+			owlTransformationInstance,
+			GetPropertyByName(m_owlModel, "matrix"),
+			&owlMatrixInstance,
+			1);
+		SetObjectProperty(
+			owlTransformationInstance,
+			GetPropertyByName(m_owlModel, "object"),
+			&owlCollectionInstance,
+			1);
 
 		SaveModel(m_owlModel, m_strOutputFile.c_str());
 	}
@@ -233,20 +322,23 @@ namespace _obj2bin
 		if (strLine.find("#") == 0) {
 			// Comment
 			getLog()->logWrite(enumLogEvent::info, strLine);
-		} else if (strLine.find("mtllib ") == 0) {
+		}
+		else if (strLine.find("mtllib ") == 0) {
 			// Material Library
 			_string::split(strLine, " ", vecTokens, false);
 			VERIFY_EXPRESSION(vecTokens.size() == 2);
 
 			m_setMaterialLibraries.insert(vecTokens[1]);
-		} else if (strLine.find("usemtl ") == 0) {
+		}
+		else if (strLine.find("usemtl ") == 0) {
 			// Current Material
 			_string::split(strLine, " ", vecTokens, false);
 			VERIFY_EXPRESSION(vecTokens.size() == 2);
 
 			m_vecMaterials.push_back(vecTokens[1]);
 			m_vecBReps.push_back(new _brep());
-		} else if (strLine.find("v ") == 0) {
+		}
+		else if (strLine.find("v ") == 0) {
 			// Vertex
 			_string::split(strLine, " ", vecTokens, false);
 			VERIFY_EXPRESSION(vecTokens.size() >= 4); // MeshLab 
@@ -254,14 +346,16 @@ namespace _obj2bin
 			m_vecVertices.push_back(atof(vecTokens[1].c_str()));
 			m_vecVertices.push_back(atof(vecTokens[2].c_str()));
 			m_vecVertices.push_back(atof(vecTokens[3].c_str()));
-		} else if (strLine.find("vt ") == 0) {
+		}
+		else if (strLine.find("vt ") == 0) {
 			// Texture UV
 			_string::split(strLine, " ", vecTokens, false);
 			VERIFY_EXPRESSION(vecTokens.size() == 3);
 
 			m_vecTextureUVs.push_back(atof(vecTokens[1].c_str()));
 			m_vecTextureUVs.push_back(m_bTextureFlipV ? -atof(vecTokens[2].c_str()) : atof(vecTokens[2].c_str()));
-		} else if (strLine.find("vn ") == 0) {
+		}
+		else if (strLine.find("vn ") == 0) {
 			// Normals
 			_string::split(strLine, " ", vecTokens, false);
 			VERIFY_EXPRESSION(vecTokens.size() == 4);
@@ -269,7 +363,8 @@ namespace _obj2bin
 			m_vecNormals.push_back(atof(vecTokens[1].c_str()));
 			m_vecNormals.push_back(atof(vecTokens[2].c_str()));
 			m_vecNormals.push_back(atof(vecTokens[3].c_str()));
-		} else if (strLine.find("f ") == 0) {
+		}
+		else if (strLine.find("f ") == 0) {
 			if (m_vecMaterials.empty()) {
 				m_vecMaterials.push_back("---default---");
 				m_vecBReps.push_back(new _brep());
@@ -281,8 +376,9 @@ namespace _obj2bin
 			}
 			// Faces
 			m_vecBReps.back()->faces().push_back(strLine);
-		} else {
-			string strWarning = "Not support element: '"; 
+		}
+		else {
+			string strWarning = "Not support element: '";
 			strWarning += strLine.substr(0, 10);
 			strWarning += "...'";
 			getLog()->logWrite(enumLogEvent::warning, strWarning);
@@ -294,16 +390,16 @@ namespace _obj2bin
 		fs::path pathInputFolder = m_strInputFile;
 		pathInputFolder = pathInputFolder.parent_path();
 
-		for (const auto& strMaterialLibarary : m_setMaterialLibraries) {
-			fs::path pathMaterialLibarary = pathInputFolder;
-			pathMaterialLibarary.append(strMaterialLibarary);
+		for (const auto& strMaterialLibrary : m_setMaterialLibraries) {
+			fs::path pathMaterialLibrary = pathInputFolder;
+			pathMaterialLibrary.append(strMaterialLibrary);
 
-			if (!fs::exists(pathMaterialLibarary)) {
+			if (!fs::exists(pathMaterialLibrary)) {
 				continue;
 			}
 
 			auto pReader = new _file_reader();
-			if (!pReader->open(pathMaterialLibarary.string().c_str())) {
+			if (!pReader->open(pathMaterialLibrary.string().c_str())) {
 				THROW_ERROR(_err::_file);
 			}
 
@@ -314,7 +410,7 @@ namespace _obj2bin
 			}
 
 			vector<string> vecTokens;
-			string strMaterial;			
+			string strMaterial;
 
 			string strLine;
 			while (ch != EOF) {
@@ -322,50 +418,59 @@ namespace _obj2bin
 					if (strLine.find("#") == 0) {
 						// Comment
 						getLog()->logWrite(enumLogEvent::info, strLine);
-					} else if (strLine.find("newmtl ") == 0) {
+					}
+					else if (strLine.find("newmtl ") == 0) {
 						// Material
 						_string::split(strLine, " ", vecTokens, false);
 						VERIFY_EXPRESSION(vecTokens.size() == 2);
 
 						strMaterial = vecTokens[1];
-					} else if (strLine.find("Ka ") == 0) {
+					}
+					else if (strLine.find("Ka ") == 0) {
 						// Ambient color
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
 						getLog()->logWrite(enumLogEvent::info, strLine);
-					} else if (strLine.find("Kd ") == 0) {
+					}
+					else if (strLine.find("Kd ") == 0) {
 						// Diffuse color
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
 						getLog()->logWrite(enumLogEvent::info, strLine);
-					} else if (strLine.find("Ks ") == 0) {
+					}
+					else if (strLine.find("Ks ") == 0) {
 						// Specular color
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
 						getLog()->logWrite(enumLogEvent::info, strLine);
-					} else if (strLine.find("Ns ") == 0) {
+					}
+					else if (strLine.find("Ns ") == 0) {
 						// Specular exponent weight
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
 						getLog()->logWrite(enumLogEvent::info, strLine);
-					} else if (strLine.find("d ") == 0) {
+					}
+					else if (strLine.find("d ") == 0) {
 						// Transparency
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
 						getLog()->logWrite(enumLogEvent::info, strLine);
-					} else if (strLine.find("illum ") == 0) {
+					}
+					else if (strLine.find("illum ") == 0) {
 						// Illumination model
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
 						getLog()->logWrite(enumLogEvent::info, strLine);
-					} else if (strLine.find("map_Kd ") == 0) {
+					}
+					else if (strLine.find("map_Kd ") == 0) {
 						// Texture
 						VERIFY_STLOBJ_IS_NOT_EMPTY(strMaterial);
 						getLog()->logWrite(enumLogEvent::info, strLine);
 
 						_string::split(strLine, " ", vecTokens, false);
 						VERIFY_EXPRESSION(vecTokens.size() == 2);
-						
+
 						auto pMaterial = new _material(0, 0, 0, 0, 1.f, (LPCWSTR)CA2W(vecTokens[1].c_str()), false); //#todo: materials without texture
 						VERIFY_EXPRESSION(m_mapMaterials.find(strMaterial) == m_mapMaterials.end());
 						m_mapMaterials[strMaterial] = { pMaterial, 0 };
 
 						strMaterial = "";
-					} else {
+					}
+					else {
 						if (!strLine.empty()) {
 							string strWarning = "Not support element: '";
 							strWarning += strLine.substr(0, 10);
@@ -373,7 +478,7 @@ namespace _obj2bin
 							getLog()->logWrite(enumLogEvent::warning, strWarning);
 						}
 					}
-					
+
 					strLine = "";
 
 					ch = pReader->getNextChar(false);

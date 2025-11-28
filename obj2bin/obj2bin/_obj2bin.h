@@ -17,6 +17,15 @@ using namespace std;
 namespace _obj2bin
 {
 	// ********************************************************************************************
+	struct _matrix
+	{
+		double _11, _12, _13;
+		double _21, _22, _23;
+		double _31, _32, _33;
+		double _41, _42, _43;
+	};
+
+	// ********************************************************************************************
 	class _brep; // Forward declaration
 
 	// ********************************************************************************************
@@ -73,7 +82,7 @@ namespace _obj2bin
 
 		void processOBJLine(const string& strLine);
 
-		void loadMaterials();		
+		void loadMaterials();
 		OwlInstance createColorComponentInstance(double dR, double dG, double dB);
 		void createDefaultMaterial();
 		OwlInstance getDefaultMaterialInstance();
