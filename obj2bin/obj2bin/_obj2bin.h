@@ -95,13 +95,16 @@ namespace _obj2bin
 
 	private: // Fields
 
+		string m_strName;
 		vector<string> m_vecFaces;
 
 	public: // Methods
-		_brep()
-			: m_vecFaces()
+		_brep(const string& strName)
+			: m_strName(strName)
+			, m_vecFaces()
 		{}
 
+		const string& name() const { return m_strName; }
 		vector<string>& faces() { return m_vecFaces; }
 	};
 };

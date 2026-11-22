@@ -150,6 +150,12 @@ namespace _obj2bin
 			assert(m_owlModel != 0);
 		}
 
+		// Tag
+		RdfProperty tagProperty = CreateProperty(
+			m_owlModel,
+			DATATYPEPROPERTY_TYPE_WCHAR_T_ARRAY,
+			"tag");
+
 		// Y-up to Z-up transformation
 		//vector<OwlInstance> vecBRepInstances;
 		for (size_t iBRep = 0; iBRep < m_vecBReps.size(); iBRep++) {
@@ -203,6 +209,21 @@ namespace _obj2bin
 
 			OwlInstance owlBRepInstance = CreateInstance(GetClassByName(m_owlModel, "BoundaryRepresentation"));
 			VERIFY_INSTANCE(owlBRepInstance);
+
+			if (!pBRep->name().empty()) {
+				wstring strName = (const wchar_t*)CA2W(pBRep->name().c_str());
+				wchar_t** szName = new wchar_t* [1];
+				szName[0] = new wchar_t[strName.length() + 1];
+				wcscpy(szName[0], strName.c_str());
+				SetDatatypeProperty(
+					owlBRepInstance,
+					tagProperty,
+					(void**)szName,
+					1);
+
+				delete[] szName[0];
+				delete[] szName;
+			}
 
 			SetDatatypeProperty(
 				owlBRepInstance,
@@ -341,13 +362,19 @@ namespace _obj2bin
 			VERIFY_EXPRESSION(vecTokens.size() == 2);
 
 			m_setMaterialLibraries.insert(vecTokens[1]);
+		}
+		else if (strLine.find("g ") == 0) {
+			// Current Group
+			_string::split(strLine, " ", vecTokens, false);
+			VERIFY_EXPRESSION(vecTokens.size() == 2);
+
+			m_vecBReps.push_back(new _brep(vecTokens[1]));
 		} else if (strLine.find("usemtl ") == 0) {
 			// Current Material
 			_string::split(strLine, " ", vecTokens, false);
 			VERIFY_EXPRESSION(vecTokens.size() == 2);
 
 			m_vecMaterials.push_back(vecTokens[1]);
-			m_vecBReps.push_back(new _brep());
 		} else if (strLine.find("v ") == 0) {
 			// Vertex
 			_string::split(strLine, " ", vecTokens, false);
@@ -374,7 +401,7 @@ namespace _obj2bin
 		} else if (strLine.find("f ") == 0) {
 			if (m_vecMaterials.empty()) {
 				m_vecMaterials.push_back("---default---");
-				m_vecBReps.push_back(new _brep());
+				m_vecBReps.push_back(new _brep(""));
 
 				string strError = "Face without material: '";
 				strError += strLine;
@@ -382,6 +409,9 @@ namespace _obj2bin
 				getLog()->logWrite(enumLogEvent::error, strError);
 			}
 			// Faces
+			if (m_vecBReps.empty()) {
+				m_vecBReps.push_back(new _brep(""));
+			}
 			m_vecBReps.back()->faces().push_back(strLine);
 		} else {
 			string strWarning = "Not support element: '"; 
