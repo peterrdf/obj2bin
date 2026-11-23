@@ -2,7 +2,8 @@
 set -e            # Exit on error
 set -o pipefail # Exit if any command in a pipe fails
 
-LOGFILE=step2gltf_x64.txt
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOGFILE="obj2bin-$(date +%Y-%m-%d_%H-%M-%S)-x64-log.txt"
 
 # Color codes
 RED='\033[0;31m'
@@ -38,7 +39,7 @@ if ls ./*.o 1> /dev/null 2>&1; then
     rm ./*.o;
 fi
 
-export CPLUS_INCLUDE_PATH=./step2gltf/include:./step2gltf/parsers:./step2gltf/obj:./step2gltf/sdk/src:./step2gltf/gltf
+export CPLUS_INCLUDE_PATH=./step2gltf/step2gltf/include:./step2gltf/step2gltf/parsers:./step2gltf/step2gltf/obj:./step2gltf/step2gltf/sdk/src:./step2gltf/step2gltf/gltf
 
 echo "Compiling obj2bin..."
 g++ ./obj2bin.cpp ./libstep2gltf.a ./libifcengine.a -o obj2bin 2>&1 | tee -a $LOGFILE
